@@ -7,7 +7,7 @@ Install node dependencies
 npm install
 ```
 
-Create .env file in root directory with the following enviornment variables
+Create .env file in root directory with the following enviornment variables:
 ```
 ATLAS_UR=<Your Atlas URI>
 ```
