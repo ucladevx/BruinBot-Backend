@@ -19,5 +19,5 @@ node server.js
 
 Recommended: run server with nodemon (automatic server restart everytime code is changed)
 ```
-nodemon server.js
+npx nodemon server.js
 ```
