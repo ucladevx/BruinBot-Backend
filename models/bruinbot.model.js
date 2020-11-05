@@ -4,16 +4,6 @@ const map = require("./map.model.js");
 const schema = mongoose.Schema;
 
 const bruinBotSchema = new schema({
-    id: {
-        type: Number,
-        required: true,
-        unique: true,
-    },
-    nickname: {
-        type: String,
-        required: false,
-        trim: true,
-    },
     location: {
         type: map.Location.schema,
         required: true,
@@ -27,6 +17,11 @@ const bruinBotSchema = new schema({
     path: {
         type: map.Path.schema,
         required: false,
+    },
+    nickname: {
+        type: String,
+        required: false,
+        trim: true,
     },
 });
 

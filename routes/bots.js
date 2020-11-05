@@ -12,12 +12,13 @@ FleetManager.findOne({}, (err, fleet) => {
     if (err) {
         res.status(400).json("Error: " + err);
     }
-    if (!fleet) {
+    if (fleet) {
+        Fleet = fleet
+    }
+    else {
         Fleet = new FleetManager();
         Fleet.save();
     }
-}).then((f) => {
-    Fleet = f;
 });
 
 /**
@@ -70,7 +71,6 @@ botsRouter.route("/closest").get((req, res) => {
  * bot object. Adds this bot object to the FleetManager's bot array.
  */
 botsRouter.route("/add").post((req, res) => {
-    const id = req.body.id;
     const lat = req.body.latitude;
     const lon = req.body.longitude;
 
@@ -80,35 +80,33 @@ botsRouter.route("/add").post((req, res) => {
     });
 
     const newBot = new BruinBot({
-        id: id,
         location: newLocation,
         status: "Idle",
     });
 
     Fleet.bots.push(newBot);
     Fleet.numOfBots++;
-    res.json("New bot " + id + " was added!");
+    res.json("New bot " + newBot._id + " was added!");
     Fleet.save();
 });
 
 /**
- * Deletes all BruinBots in the FleetManager with the id provided in the
+ * Deletes BruinBot in the FleetManager with the id provided in the
  * request's body.
  */
 botsRouter.route("/").delete((req, res) => {
     id = req.body.id;
     oldLength = Fleet.bots.length;
-    // Delete all bots with a matching id to the one provided
-    Fleet.bots = Fleet.bots.filter((bot) => bot.id != id);
-    Fleet.numOfBots -= oldLength - Fleet.bots.length;
-    Fleet.save();
-    res.json(
-        oldLength -
-            Fleet.bots.length +
-            " bot(s) with the id " +
-            id +
-            " deleted!"
-    );
+
+    // Delete bot with a matching id to the one provided
+    Fleet.bots = Fleet.bots.filter((bot) => bot._id != id);
+    if (oldLength - Fleet.bots.length == 0) {
+        res.json("No bot with the id " + id + " exists!");
+    } else {
+        Fleet.numOfBots--;
+        Fleet.save();
+        res.json("Bot with the id " + id + " deleted!");
+    }
 });
 
 module.exports = botsRouter;
