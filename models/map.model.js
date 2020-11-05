@@ -26,14 +26,6 @@ const mapNodeSchema = new schema({
 });
 
 const pathSchema = new schema({
-    start: {
-        type: mapNodeSchema,
-        required: true,
-    },
-    end: {
-        type: mapNodeSchema,
-        required: true,
-    },
     points: {
         type: [locationSchema],
         required: true,
