@@ -13,9 +13,8 @@ FleetManager.findOne({}, (err, fleet) => {
         res.status(400).json("Error: " + err);
     }
     if (fleet) {
-        Fleet = fleet
-    }
-    else {
+        Fleet = fleet;
+    } else {
         Fleet = new FleetManager();
         Fleet.save();
     }
@@ -35,37 +34,7 @@ botsRouter.route("/").get((req, res) => {
  * to the coordinates in the request's body.
  */
 botsRouter.route("/closest").get((req, res) => {
-    if (Fleet.bots.length < 1) {
-        console.log("none")
-        res.json(null)
-        return;
-    }
-
-    const lat = req.body.latitude;
-    const lon = req.body.longitude;
-
-    closestBot = undefined;
-    smallestDistance = Infinity;
-    currentDistance = undefined;
-
-    // For all bots, first find their distance from the provided coordinates
-    for (var bot of Fleet.bots) {
-        currentDistance = coordDistanceKM(
-            lat,
-            lon,
-            bot.location.latitude,
-            bot.location.longitude
-        );
-        // If this distance is the smallest yet found, save this distance and
-        // the bot it's associated with
-        if (currentDistance < smallestDistance) {
-            closestBot = bot;
-            smallestDistance = currentDistance;
-        }
-    }
-
-    // Return bot object with shortest distance to the provided coordinates
-    res.json(closestBot);
+    res.json(findBotCoords(req.body.latitude, req.body.longitude));
 });
 
 /**
@@ -137,9 +106,44 @@ function coordDistanceKM(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Converts degrees to radians
+ * Converts degrees to radians.
  * @param {number} degrees Number of degrees to convert to radians
  */
 function degToRad(degrees) {
     return (degrees * Math.PI) / 180;
+}
+
+/**
+ * Returns the bot object that's closest to the provided coordinate. Returns
+ * null if there are no bots in the fleet.
+ *
+ * @param {number} lat Latitude of the coordinate that we want to find the closest bot to
+ * @param {number} lon Longitude of the coordinate that we want to find the closest bot to
+ */
+function findBotCoords(lat, lon) {
+    if (Fleet.bots.length < 1) {
+        return null;
+    }
+
+    closestBot = undefined;
+    smallestDistance = Infinity;
+    currentDistance = undefined;
+
+    // For all bots, first find their distance from the provided coordinates
+    for (var bot of Fleet.bots) {
+        currentDistance = coordDistanceKM(
+            lat,
+            lon,
+            bot.location.latitude,
+            bot.location.longitude
+        );
+        // If this distance is the smallest yet found, save this distance and
+        // the bot it's associated with
+        if (currentDistance < smallestDistance) {
+            closestBot = bot;
+            smallestDistance = currentDistance;
+        }
+    }
+
+    return closestBot;
 }
