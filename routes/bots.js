@@ -7,7 +7,7 @@ let Map = require("../models/map.model");
 
 // If a FleetManger document exists, update that one. If it doesn't,
 // make a new one.
-let Fleet = null;
+let Fleet = undefined;
 FleetManager.findOne({}, (err, fleet) => {
     if (err) {
         res.status(400).json("Error: " + err);
@@ -36,7 +36,9 @@ botsRouter.route("/").get((req, res) => {
  */
 botsRouter.route("/closest").get((req, res) => {
     if (Fleet.bots.length < 1) {
-        return null;
+        console.log("none")
+        res.json(null)
+        return;
     }
 
     const lat = req.body.latitude;
