@@ -38,12 +38,27 @@ botsRouter.route("/closest").get((req, res) => {
 });
 
 /**
- * Creates a location with the provided coordinates and adds it to a new
- * bot object. Adds this bot object to the FleetManager's bot array.
+ * Returns Location of the BruinBot with the provided id.
+ */
+botsRouter.route("/location").get((req, res) => {
+    const id = req.body.id;
+    for (var bot of Fleet.bots) {
+        if (bot._id == id) {
+            res.json(bot.location);
+            return;
+        }
+    }
+    res.json(null);
+});
+
+/**
+ * Adds a new BruinBot object to the FleetManager's bot array with a Location
+ * and name as provided in the request's body.
  */
 botsRouter.route("/add").post((req, res) => {
     const lat = req.body.latitude;
     const lon = req.body.longitude;
+    const name = req.body.name;
 
     const newLocation = new Map.Location({
         latitude: lat,
@@ -53,11 +68,11 @@ botsRouter.route("/add").post((req, res) => {
     const newBot = new BruinBot({
         location: newLocation,
         status: "Idle",
+        name: name,
     });
 
     Fleet.bots.push(newBot);
-    Fleet.numOfBots++;
-    res.json("New bot " + newBot._id + " was added!");
+    res.json("New bot " + name + " (" + newBot._id + ") was added!");
     Fleet.save();
 });
 
@@ -74,7 +89,6 @@ botsRouter.route("/").delete((req, res) => {
     if (oldLength - Fleet.bots.length == 0) {
         res.json("No bot with the id " + id + " exists!");
     } else {
-        Fleet.numOfBots--;
         Fleet.save();
         res.json("Bot with the id " + id + " deleted!");
     }

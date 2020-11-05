@@ -14,13 +14,9 @@ const bruinBotSchema = new schema({
         enum: ["Idle", "InTransit"],
         default: "Idle",
     },
-    path: {
-        type: map.Path.schema,
-        required: false,
-    },
-    nickname: {
+    name: {
         type: String,
-        required: false,
+        required: true,
         trim: true,
     },
 });
