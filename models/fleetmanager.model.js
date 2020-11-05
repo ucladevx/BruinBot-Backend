@@ -8,6 +8,11 @@ const fleetManagerSchema = new schema({
         type: [bruinbot.schema],
         required: true,
     },
+    numOfBots: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
 });
 
 const FleetManager = mongoose.model("FleetManager", fleetManagerSchema);

@@ -1,31 +1,33 @@
-const mongoose = require('mongoose');
-const map = require('./map.model.js');
+const mongoose = require("mongoose");
+const map = require("./map.model.js");
 
 const schema = mongoose.Schema;
 
 const bruinBotSchema = new schema({
     id: {
         type: Number,
-        required: true
+        required: true,
+        unique: true,
     },
     nickname: {
         type: String,
-        required: false
+        required: false,
+        trim: true,
     },
     location: {
         type: map.Location.schema,
-        required: true
+        required: true,
     },
     status: {
         type: String,
         required: true,
         enum: ["Idle", "InTransit"],
-        default: "Idle"
+        default: "Idle",
     },
     path: {
         type: map.Path.schema,
-        required: false
-    }
+        required: false,
+    },
 });
 
 const BruinBot = mongoose.model("BruinBot", bruinBotSchema);

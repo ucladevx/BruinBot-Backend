@@ -3,11 +3,11 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
 const locationSchema = new schema({
-    longitude: {
+    latitude: {
         type: Number,
         required: true,
     },
-    latitude: {
+    longitude: {
         type: Number,
         required: true,
     },
@@ -18,7 +18,7 @@ const mapNodeSchema = new schema({
         type: locationSchema,
         required: true,
     },
-    latitude: {
+    name: {
         type: String,
         required: true,
         default: "",
