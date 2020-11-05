@@ -11,6 +11,8 @@ router.route('/').get((req, res) => {
 
 router.route('/add').post((req, res) => {
     const username = req.body.username;
+    const id = req.body.id;
+
 
     const newUser = new User({
     	"id": id,
@@ -19,6 +21,14 @@ router.route('/add').post((req, res) => {
 
     newUser.save()
         .then(() => res.json("User " + username + " was added!"))
+        .catch(err => res.status(400).json('Error: ' + err));
+});
+
+router.route('/delete').post((req, res) => {
+    //deletes by id
+    User.findOne({id: req.body.id})
+        .then(user => user.remove())
+        .then(() => res.json("User " + req.body.id + " was deleted!"))
         .catch(err => res.status(400).json('Error: ' + err));
 });
 
