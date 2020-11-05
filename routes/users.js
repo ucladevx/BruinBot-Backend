@@ -25,10 +25,10 @@ router.route('/add').post((req, res) => {
 });
 
 router.route('/delete').post((req, res) => {
-
-    User.findOne({username: req.body.username})
+    //deletes by id
+    User.findOne({id: req.body.id})
         .then(user => user.remove())
-        .then(() => res.json("User " + req.body.username + " was deleted!"))
+        .then(() => res.json("User " + req.body.id + " was deleted!"))
         .catch(err => res.status(400).json('Error: ' + err));
 });
 
