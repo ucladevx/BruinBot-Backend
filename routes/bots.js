@@ -5,7 +5,7 @@ const botsRouter = express.Router();
 let FleetManager = require("../models/fleetmanager.model");
 let BruinBot = require("../models/bruinbot.model");
 let Map = require("../models/map.model");
-let util = require("./utils")
+let util = require("./utils");
 
 // If a FleetManger document exists, update that one. If it doesn't,
 // make a new one.
@@ -23,36 +23,8 @@ FleetManager.findOne({}, (err, fleet) => {
 });
 
 /**
- * Return all BruinBot objects.
+ * ------------------------- POST (add new objects) -------------------------
  */
-botsRouter.route("/").get((req, res) => {
-    FleetManager.find()
-        .then((bots) => res.json(bots))
-        .catch((err) => res.status(400).json("Error: " + err));
-});
-
-/**
- * Search through all BruinBot objects and return the closest BruinBot object
- * to the coordinates in the request's body.
- */
-botsRouter.route("/closest").get((req, res) => {
-    res.json(findBotCoords(req.body.latitude, req.body.longitude));
-});
-
-/**
- * Returns Location of the BruinBot with the provided id.
- */
-botsRouter.route("/location").get((req, res) => {
-    const id = req.body.id;
-    
-    for (var bot of Fleet.bots) {
-        if (bot._id == id) {
-            res.json(bot.location);
-            return;
-        }
-    }
-    res.json(null);
-});
 
 /**
  * Adds a new BruinBot object to the FleetManager's bot array with a Location
@@ -80,6 +52,77 @@ botsRouter.route("/add").post((req, res) => {
 });
 
 /**
+ * --------------------- PUT (update existing objects) ----------------------
+ */
+
+/**
+ * Update BruinBot object with specified id to have new location.
+ */
+botsRouter.route("/updateLocation").put((req, res) => {
+    const id = req.body.id;
+    const lat = req.body.latitude;
+    const lon = req.body.longitude;
+    for (var bot of Fleet.bots) {
+        if (bot._id == id) {
+            bot.location.latitude = lat;
+            bot.location.longitude = lon;
+            res.json(
+                "Bot with the id " +
+                    id +
+                    " updated with lat: " +
+                    lat +
+                    ", lon: " +
+                    lon +
+                    "!"
+            );
+            Fleet.save();
+            return;
+        }
+    }
+    res.json("No bot with the id " + id + " exists!");
+});
+
+/**
+ * ----------------- GET (return information about objects) ----------------
+ */
+
+/**
+ * Return all BruinBot objects.
+ */
+botsRouter.route("/").get((req, res) => {
+    FleetManager.find()
+        .then((bots) => res.json(bots))
+        .catch((err) => res.status(400).json("Error: " + err));
+});
+
+/**
+ * Search through all BruinBot objects and return the closest BruinBot object
+ * to the coordinates in the request's body.
+ */
+botsRouter.route("/closest").get((req, res) => {
+    res.json(findBotCoords(req.body.latitude, req.body.longitude));
+});
+
+/**
+ * Returns Location of the BruinBot with the provided id.
+ */
+botsRouter.route("/location").get((req, res) => {
+    const id = req.body.id;
+
+    for (var bot of Fleet.bots) {
+        if (bot._id == id) {
+            res.json(bot.location);
+            return;
+        }
+    }
+    res.json(null);
+});
+
+/**
+ * ------------------------- DELETE (remove objects) ------------------------
+ */
+
+/**
  * Deletes BruinBot in the FleetManager with the id provided in the
  * request's body.
  */
@@ -98,6 +141,7 @@ botsRouter.route("/").delete((req, res) => {
     }
 });
 
+// Exports module for use in server.js
 module.exports = botsRouter;
 
 /**
