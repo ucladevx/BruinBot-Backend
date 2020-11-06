@@ -17,6 +17,7 @@ const bruinBotSchema = new schema({
     name: {
         type: String,
         required: true,
+        unique: true,
         trim: true,
     },
 });

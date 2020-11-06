@@ -1,9 +1,11 @@
 const express = require("express");
 
 const botsRouter = express.Router();
+
 let FleetManager = require("../models/fleetmanager.model");
 let BruinBot = require("../models/bruinbot.model");
 let Map = require("../models/map.model");
+let util = require("./utils")
 
 // If a FleetManger document exists, update that one. If it doesn't,
 // make a new one.
@@ -42,6 +44,7 @@ botsRouter.route("/closest").get((req, res) => {
  */
 botsRouter.route("/location").get((req, res) => {
     const id = req.body.id;
+    
     for (var bot of Fleet.bots) {
         if (bot._id == id) {
             res.json(bot.location);
@@ -81,7 +84,8 @@ botsRouter.route("/add").post((req, res) => {
  * request's body.
  */
 botsRouter.route("/").delete((req, res) => {
-    id = req.body.id;
+    const id = req.body.id;
+
     oldLength = Fleet.bots.length;
 
     // Delete bot with a matching id to the one provided
@@ -96,36 +100,9 @@ botsRouter.route("/").delete((req, res) => {
 
 module.exports = botsRouter;
 
-// Helper functions
-
 /**
- * Returns the distance between two coordinates in kilometers.
- * Uses the haversine formula.
- *
- * @param {number} lat1 Latitude of the first coordinate
- * @param {number} lon1 Longitude of the first coordinate
- * @param {number} lat2 Latitude of the second coordinate
- * @param {number} lon2 Longitude of the second coordinate
+ * ---------------------------- Helper functions ----------------------------
  */
-function coordDistanceKM(lat1, lon1, lat2, lon2) {
-    radiusKM = 6371;
-    lat1rad = degToRad(lat1);
-    lon1rad = degToRad(lon1);
-    lat2rad = degToRad(lat2);
-    lon2rad = degToRad(lon2);
-    u = Math.sin((lat2rad - lat1rad) / 2);
-    v = Math.sin((lon2rad - lon1rad) / 2);
-    x = Math.sqrt(u * u + Math.cos(lat1rad) * Math.cos(lat2rad) * v * v);
-    return 2.0 * radiusKM * Math.asin(x);
-}
-
-/**
- * Converts degrees to radians.
- * @param {number} degrees Number of degrees to convert to radians
- */
-function degToRad(degrees) {
-    return (degrees * Math.PI) / 180;
-}
 
 /**
  * Returns the bot object that's closest to the provided coordinate. Returns
@@ -145,7 +122,7 @@ function findBotCoords(lat, lon) {
 
     // For all bots, first find their distance from the provided coordinates
     for (var bot of Fleet.bots) {
-        currentDistance = coordDistanceKM(
+        currentDistance = util.coordDistanceKM(
             lat,
             lon,
             bot.location.latitude,
