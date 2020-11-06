@@ -11,7 +11,7 @@ const userSchema = new schema(
             trim: true,
             minlength: 5,
         },
-        id: {
+        firebase_id: {
             type: String,
             required: true,
             unique: true,

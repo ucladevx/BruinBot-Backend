@@ -11,11 +11,11 @@ router.route("/").get((req, res) => {
 
 router.route("/add").post((req, res) => {
     const username = req.body.username;
-    const id = req.body.id;
+    const firebase_id = req.body.firebase_id;
 
 
     const newUser = new User({
-        id: id,
+        firebase_id: firebase_id,
         username: username,
     });
 
@@ -25,11 +25,11 @@ router.route("/add").post((req, res) => {
         .catch((err) => res.status(400).json("Error: " + err));
 });
 
-router.route('/delete').post((req, res) => {
+router.route('/').delete((req, res) => {
     //deletes by id
-    User.findOne({id: req.body.id})
+    User.findOne({firebase_id: req.body.firebase_id})
         .then(user => user.remove())
-        .then(() => res.json("User " + req.body.id + " was deleted!"))
+        .then(() => res.json("User " + req.body.firebase_id + " was deleted!"))
         .catch(err => res.status(400).json('Error: ' + err));
 });
 
