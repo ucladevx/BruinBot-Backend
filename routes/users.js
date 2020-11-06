@@ -13,7 +13,6 @@ router.route("/add").post((req, res) => {
     const username = req.body.username;
     const firebase_id = req.body.firebase_id;
 
-
     const newUser = new User({
         firebase_id: firebase_id,
         username: username,
@@ -21,7 +20,7 @@ router.route("/add").post((req, res) => {
 
     newUser
         .save()
-        .then(() => res.json("User " + username + " was added!"))
+        .then(() => res.json(newUser))
         .catch((err) => res.status(400).json("Error: " + err));
 });
 

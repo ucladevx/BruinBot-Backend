@@ -75,7 +75,7 @@ botsRouter.route("/add").post((req, res) => {
     });
 
     Fleet.bots.push(newBot);
-    res.json("New bot " + name + " (" + newBot._id + ") was added!");
+    res.json(newBot);
     Fleet.save();
 });
 
