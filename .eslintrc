@@ -1,0 +1,17 @@
+{
+	"parser": "esprima",
+	"extends": [
+		"eslint:recommended",
+		"plugin:node/recommended",
+		"plugin:prettier/recommended",
+		"plugin:jsdoc/recommended"
+	],
+	"rules": {
+		"no-unused-vars": [
+			"error",
+			{
+				"argsIgnorePattern": "^_"
+			}
+		]
+	}
+}

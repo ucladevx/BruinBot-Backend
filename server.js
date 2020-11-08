@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -9,22 +10,32 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 const uri = process.env.ATLAS_URI;
-mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
+mongoose.connect(uri, {
+	useNewUrlParser: true,
+	useCreateIndex: true,
+	useUnifiedTopology: true,
+});
 const connection = mongoose.connection;
 connection.once('open', () => {
-    console.log("Mongoose connection opened!");
-})
+	console.log('Mongoose connection opened!');
+});
 
 const usersRouter = require('./routes/users');
+const botsRouter = require('./routes/bots');
+const itemsRouter = require('./routes/items');
 
 app.get('/', function (req, res) {
-    res.send('Welcome to BruinBot API!');
-  });
+	res.send('Welcome to BruinBot API!');
+});
 
 app.use('/users', usersRouter);
+app.use('/bots', botsRouter);
+app.use('/items', itemsRouter);
 
 app.listen(port, () => {
-    console.log(`This serveris running on port ${port}!`);
+	console.log(`This server is running on port ${port}!`);
 });

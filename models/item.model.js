@@ -2,27 +2,28 @@ const mongoose = require('mongoose');
 
 const schema = mongoose.Schema;
 
-const userSchema = new schema(
+const itemSchema = new schema(
 	{
-		username: {
+		name: {
 			type: String,
 			required: true,
 			unique: true,
 			trim: true,
-			minlength: 5,
 		},
-		firebase_id: {
+		price: {
+			type: Number,
+			required: true,
+		},
+		img: {
 			type: String,
 			required: true,
-			unique: true,
-			trim: true,
 		},
 	},
 	{
-		timestamps: true,
+		timestampes: true,
 	}
 );
 
-const User = mongoose.model('User', userSchema);
+const Item = mongoose.model('Item', itemSchema);
 
-module.exports = User;
+module.exports = Item;

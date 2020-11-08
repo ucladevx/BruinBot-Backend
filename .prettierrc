@@ -1,0 +1,6 @@
+{
+	"proseWrap": "never",
+	"useTabs": true,
+	"singleQuote": true,
+	"endOfLine":"auto"
+}
