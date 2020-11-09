@@ -1,0 +1,21 @@
+{
+	"parser": "esprima",
+	"extends": [
+		"eslint:recommended",
+		"plugin:node/recommended",
+		"plugin:prettier/recommended"
+	],
+	"rules": {
+		"no-console": "warn",
+		"linebreak-style": [
+			"error",
+			"unix"
+		],
+		"no-unused-vars": [
+			"error",
+			{
+				"argsIgnorePattern": "^_"
+			}
+		]
+	}
+}
