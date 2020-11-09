@@ -2,25 +2,9 @@ const express = require("express");
 
 const botsRouter = express.Router();
 
-let FleetManager = require("../models/fleetmanager.model");
 let BruinBot = require("../models/bruinbot.model");
 let Map = require("../models/map.model");
 let util = require("./utils");
-
-// If a FleetManger document exists, update that one. If it doesn't,
-// make a new one.
-let Fleet = undefined;
-FleetManager.findOne({}, (err, fleet) => {
-    if (err) {
-        res.status(400).json("Error: " + err);
-    }
-    if (fleet) {
-        Fleet = fleet;
-    } else {
-        Fleet = new FleetManager();
-        Fleet.save();
-    }
-});
 
 /**
  * ------------------------- POST (add new objects) -------------------------
@@ -46,9 +30,14 @@ botsRouter.route("/add").post((req, res) => {
         name: name,
     });
 
-    Fleet.bots.push(newBot);
-    res.json(newBot);
-    Fleet.save();
+    newBot.save(function (err, bot) {
+        if (err) {
+            console.log(err);
+            res.send(400, "Bad request.");
+        } else {
+            res.json(newBot);
+        }
+    });
 });
 
 /**
@@ -62,24 +51,19 @@ botsRouter.route("/updateLocation").put((req, res) => {
     const id = req.body.id;
     const lat = req.body.latitude;
     const lon = req.body.longitude;
-    for (var bot of Fleet.bots) {
-        if (bot._id == id) {
-            bot.location.latitude = lat;
-            bot.location.longitude = lon;
-            res.json(
-                "Bot with the id " +
-                    id +
-                    " updated with lat: " +
-                    lat +
-                    ", lon: " +
-                    lon +
-                    "!"
-            );
-            Fleet.save();
-            return;
+
+    BruinBot.findOneAndUpdate(
+        { _id: id },
+        { "location.latitude": lat, "location.longitude": lon },
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                res.send(400, "Bad request.");
+            } else {
+                res.json(result);
+            }
         }
-    }
-    res.json("No bot with the id " + id + " exists!");
+    );
 });
 
 /**
@@ -90,9 +74,14 @@ botsRouter.route("/updateLocation").put((req, res) => {
  * Return all BruinBot objects.
  */
 botsRouter.route("/").get((req, res) => {
-    FleetManager.find()
-        .then((bots) => res.json(bots))
-        .catch((err) => res.status(400).json("Error: " + err));
+    BruinBot.find({}, function (err, bots) {
+        if (err) {
+            console.log(err);
+            res.send(500, "Internal error.");
+        } else {
+            res.json(bots);
+        }
+    });
 });
 
 /**
@@ -100,7 +89,22 @@ botsRouter.route("/").get((req, res) => {
  * to the coordinates in the request's body.
  */
 botsRouter.route("/closest").get((req, res) => {
-    res.json(findBotCoords(req.body.latitude, req.body.longitude));
+    const lat = req.body.latitude;
+    const lon = req.body.longitude;
+
+    BruinBot.find({}, function (err, bots) {
+        if (err) {
+            console.log(err);
+            res.send(500, "Internal error.");
+            return;
+        }
+        let closest = findBotCoords(bots, lat, lon);
+        if (closest == null) {
+            res.send(500, "No bots in collection.");
+            return;
+        }
+        res.send(closest);
+    });
 });
 
 /**
@@ -109,13 +113,14 @@ botsRouter.route("/closest").get((req, res) => {
 botsRouter.route("/location").get((req, res) => {
     const id = req.body.id;
 
-    for (var bot of Fleet.bots) {
-        if (bot._id == id) {
+    BruinBot.findOne({ _id: id }, function (err, bot) {
+        if (err) {
+            console.log(err);
+            res.send(400, "Bad request.");
+        } else {
             res.json(bot.location);
-            return;
         }
-    }
-    res.json(null);
+    });
 });
 
 /**
@@ -123,22 +128,19 @@ botsRouter.route("/location").get((req, res) => {
  */
 
 /**
- * Deletes BruinBot in the FleetManager with the id provided in the
- * request's body.
+ * Deletes BruinBot with the id provided in the request's body.
  */
 botsRouter.route("/").delete((req, res) => {
     const id = req.body.id;
 
-    oldLength = Fleet.bots.length;
-
-    // Delete bot with a matching id to the one provided
-    Fleet.bots = Fleet.bots.filter((bot) => bot._id != id);
-    if (oldLength - Fleet.bots.length == 0) {
-        res.json("No bot with the id " + id + " exists!");
-    } else {
-        Fleet.save();
-        res.json("Bot with the id " + id + " deleted!");
-    }
+    BruinBot.remove({ _id: id }, (err, result) => {
+        if (err) {
+            console.log(err);
+            res.send(400, "Bad request.");
+        } else {
+            res.json(result);
+        }
+    });
 });
 
 // Exports module for use in server.js
@@ -150,13 +152,14 @@ module.exports = botsRouter;
 
 /**
  * Returns the bot object that's closest to the provided coordinate. Returns
- * null if there are no bots in the fleet.
+ * null if there are no bots in the provided array.
  *
+ * @param {Array} bots Array of BruinBot objects
  * @param {number} lat Latitude of the coordinate that we want to find the closest bot to
  * @param {number} lon Longitude of the coordinate that we want to find the closest bot to
  */
-function findBotCoords(lat, lon) {
-    if (Fleet.bots.length < 1) {
+function findBotCoords(bots, lat, lon) {
+    if (bots.length < 1) {
         return null;
     }
 
@@ -164,18 +167,18 @@ function findBotCoords(lat, lon) {
     smallestDistance = Infinity;
     currentDistance = undefined;
 
-    // For all bots, first find their distance from the provided coordinates
-    for (var bot of Fleet.bots) {
-        currentDistance = util.coordDistanceKM(
+    // For all bots that are, first find their distance from the provided coordinates
+    for (var b of bots) {
+        currentDistance = util.coordDistanceM(
             lat,
             lon,
-            bot.location.latitude,
-            bot.location.longitude
+            b.location.latitude,
+            b.location.longitude
         );
         // If this distance is the smallest yet found, save this distance and
         // the bot it's associated with
         if (currentDistance < smallestDistance) {
-            closestBot = bot;
+            closestBot = b;
             smallestDistance = currentDistance;
         }
     }

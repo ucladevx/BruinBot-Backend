@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 const bruinbot = require("./bruinbot.model.js");
 
 const schema = mongoose.Schema;
+const ObjectId = schema.ObjectId;
 
 const fleetManagerSchema = new schema({
     bots: {
-        type: [bruinbot.schema],
-        required: true,
+        type: [ObjectId],
     },
 });
 
