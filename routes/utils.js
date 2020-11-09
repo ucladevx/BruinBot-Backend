@@ -17,14 +17,14 @@ function degToRad(degrees) {
  * @param {number} lon2 Longitude of the second coordinate
  */
 function coordDistanceKM(lat1, lon1, lat2, lon2) {
-	radiusKM = 6371;
-	lat1rad = degToRad(lat1);
-	lon1rad = degToRad(lon1);
-	lat2rad = degToRad(lat2);
-	lon2rad = degToRad(lon2);
-	u = Math.sin((lat2rad - lat1rad) / 2);
-	v = Math.sin((lon2rad - lon1rad) / 2);
-	x = Math.sqrt(u * u + Math.cos(lat1rad) * Math.cos(lat2rad) * v * v);
+	let radiusKM = 6371;
+	let lat1rad = degToRad(lat1);
+	let lon1rad = degToRad(lon1);
+	let lat2rad = degToRad(lat2);
+	let lon2rad = degToRad(lon2);
+	let u = Math.sin((lat2rad - lat1rad) / 2);
+	let v = Math.sin((lon2rad - lon1rad) / 2);
+	let x = Math.sqrt(u * u + Math.cos(lat1rad) * Math.cos(lat2rad) * v * v);
 	return 2.0 * radiusKM * Math.asin(x);
 }
 
