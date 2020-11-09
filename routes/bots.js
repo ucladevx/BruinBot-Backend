@@ -12,7 +12,7 @@ let util = require('./utils');
 let Fleet = undefined;
 FleetManager.findOne({}, (err, fleet) => {
 	if (err) {
-		res.status(400).json('Error: ' + err);
+		console.log('Error: ' + err);
 	}
 	if (fleet) {
 		Fleet = fleet;
@@ -86,7 +86,7 @@ botsRouter.route('/add').post((req, res) => {
 botsRouter.route('/').delete((req, res) => {
 	const id = req.body.id;
 
-	oldLength = Fleet.bots.length;
+	let oldLength = Fleet.bots.length;
 
 	// Delete bot with a matching id to the one provided
 	Fleet.bots = Fleet.bots.filter((bot) => bot._id != id);
