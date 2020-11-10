@@ -30,7 +30,7 @@ botsRouter.route('/add').post((req, res) => {
 		name: name,
 	});
 
-	newBot.save(function (err, bot) {
+	newBot.save(function (err) {
 		if (err) {
 			console.log(err);
 			res.send(400, 'Bad request.');
