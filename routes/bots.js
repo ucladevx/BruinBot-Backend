@@ -163,9 +163,9 @@ function findBotCoords(bots, lat, lon) {
         return null;
     }
 
-    closestBot = undefined;
-    smallestDistance = Infinity;
-    currentDistance = undefined;
+    let closestBot = undefined;
+    let smallestDistance = Infinity;
+    let currentDistance = undefined;
 
     // For all bots that are, first find their distance from the provided coordinates
     for (var b of bots) {
