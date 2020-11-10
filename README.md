@@ -21,3 +21,8 @@ Recommended: run server with nodemon (automatic server restart everytime code is
 ```
 npx nodemon server.js
 ```
+
+Useful: check to see if your code is formatted and documented properly by running eslint!
+```
+npm run eslint
+```

@@ -1,7 +1,9 @@
 /**
  * Converts degrees to radians.
-
+ *
  * @param {number} degrees Number of degrees to convert to radians
+ *
+ * @returns {number} Degree in radians
  */
 function degToRad(degrees) {
 	return (degrees * Math.PI) / 180;
@@ -15,6 +17,8 @@ function degToRad(degrees) {
  * @param {number} lon1 Longitude of the first coordinate
  * @param {number} lat2 Latitude of the second coordinate
  * @param {number} lon2 Longitude of the second coordinate
+ *
+ * @returns {number} Distance between two points on a globe
  */
 function coordDistanceKM(lat1, lon1, lat2, lon2) {
 	let radiusKM = 6371;
