@@ -157,6 +157,8 @@ module.exports = botsRouter;
  * @param {Array} bots Array of BruinBot objects
  * @param {number} lat Latitude of the coordinate that we want to find the closest bot to
  * @param {number} lon Longitude of the coordinate that we want to find the closest bot to
+ *
+ * @returns {BruinBot} Closest bruinbot to provided coordinates
  */
 function findBotCoords(bots, lat, lon) {
     if (bots.length < 1) {
