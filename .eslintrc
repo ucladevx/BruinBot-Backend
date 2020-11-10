@@ -7,10 +7,6 @@
 		"plugin:jsdoc/recommended"
 	],
 	"rules": {
-		"linebreak-style": [
-			"error",
-			"unix"
-		],
 		"no-unused-vars": [
 			"error",
 			{

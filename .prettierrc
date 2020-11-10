@@ -1,5 +1,6 @@
 {
 	"proseWrap": "never",
 	"useTabs": true,
-	"singleQuote": true
+	"singleQuote": true,
+	"endOfLine":"auto"
 }
