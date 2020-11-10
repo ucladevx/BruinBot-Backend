@@ -4,7 +4,7 @@
  * @param {number} degrees Number of degrees to convert to radians
  */
 function degToRad(degrees) {
-    return (degrees * Math.PI) / 180;
+	return (degrees * Math.PI) / 180;
 }
 
 /**
