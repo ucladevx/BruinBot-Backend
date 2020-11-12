@@ -15,9 +15,15 @@ let util = require('./utils');
  * and name as provided in the request's body.
  */
 botsRouter.route('/add').post((req, res) => {
+	const name = req.body.name;
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
-	const name = req.body.name;
+
+	if (!name || !lat || !lon) {
+		return res.status(400).json({
+			err: "Required name / lat / lon data not in request's body.",
+		});
+	}
 
 	const newLocation = new Map.Location({
 		latitude: lat,
@@ -33,7 +39,7 @@ botsRouter.route('/add').post((req, res) => {
 	newBot.save(function (err) {
 		if (err) {
 			console.log(err);
-			res.send(400, 'Bad request.');
+			res.status(400).send(err);
 		} else {
 			res.json(newBot);
 		}
@@ -52,13 +58,19 @@ botsRouter.route('/updateLocation').put((req, res) => {
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
 
+	if (!id || !lat || !lon) {
+		return res.status(400).json({
+			err: "Required id / lat / lon data not in request's body.",
+		});
+	}
+
 	BruinBot.findOneAndUpdate(
 		{ _id: id },
 		{ 'location.latitude': lat, 'location.longitude': lon },
 		(err, result) => {
 			if (err) {
 				console.log(err);
-				res.send(400, 'Bad request.');
+				res.status(400).send(err);
 			} else {
 				res.json(result);
 			}
@@ -77,7 +89,7 @@ botsRouter.route('/').get((req, res) => {
 	BruinBot.find({}, function (err, bots) {
 		if (err) {
 			console.log(err);
-			res.send(500, 'Internal error.');
+			res.status(500).send(err);
 		} else {
 			res.json(bots);
 		}
@@ -92,15 +104,21 @@ botsRouter.route('/closest').get((req, res) => {
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
 
+	if (!lat || !lon) {
+		return res.status(400).json({
+			err: "Required lat / lon data not in request's body.",
+		});
+	}
+
 	BruinBot.find({}, function (err, bots) {
 		if (err) {
 			console.log(err);
-			res.send(500, 'Internal error.');
+			res.status(400).send(err);
 			return;
 		}
 		let closest = findBotCoords(bots, lat, lon);
 		if (closest == null) {
-			res.send(500, 'No bots in collection.');
+			res.status(500).send('No bots in collection.');
 			return;
 		}
 		res.send(closest);
@@ -113,10 +131,16 @@ botsRouter.route('/closest').get((req, res) => {
 botsRouter.route('/location').get((req, res) => {
 	const id = req.body.id;
 
+	if (!id) {
+		return res.status(400).json({
+			err: "Required id data not in request's body.",
+		});
+	}
+
 	BruinBot.findOne({ _id: id }, function (err, bot) {
 		if (err) {
 			console.log(err);
-			res.send(400, 'Bad request.');
+			res.status(400).send(err);
 		} else {
 			res.json(bot.location);
 		}
@@ -133,10 +157,16 @@ botsRouter.route('/location').get((req, res) => {
 botsRouter.route('/').delete((req, res) => {
 	const id = req.body.id;
 
+	if (!id) {
+		return res.status(400).json({
+			err: "Required id data not in request's body.",
+		});
+	}
+
 	BruinBot.remove({ _id: id }, (err, result) => {
 		if (err) {
 			console.log(err);
-			res.send(400, 'Bad request.');
+			res.send(400, err);
 		} else {
 			res.json(result);
 		}
