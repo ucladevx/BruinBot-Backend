@@ -1,4 +1,5 @@
 # BruinBot-Backend
+Our backend stack consists of Express + Mongoose. Refer to our [notion page](https://www.notion.so/uclabruinbot/Backend-dcd2a56527e34f87a697e8b54c52ce96) for more details. 
 
 ### Set up instructions:
 
