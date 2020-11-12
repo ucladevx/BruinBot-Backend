@@ -5,7 +5,7 @@ Our backend stack consists of Express + Mongoose. Refer to our [notion page](htt
 
 Install node dependencies
 ```
-npm install
+npm ci
 ```
 
 Create .env file in root directory with the following enviornment variables:
