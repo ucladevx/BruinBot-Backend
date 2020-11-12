@@ -46,7 +46,7 @@ const removeOneImage = async (filename) => {
 	gfs.delete(imgs[0]._id);
 };
 
-/*
+/**
  * Get a list of all items
  */
 router.get('/', (req, res) => {
@@ -55,7 +55,7 @@ router.get('/', (req, res) => {
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
-/*
+/**
  * Delete 1 item specified by item name
  */
 router.delete('/', (req, res) => {
@@ -78,7 +78,7 @@ router.delete('/', (req, res) => {
 		});
 });
 
-/*
+/**
  * Get image of item by the image's filename
  */
 router.get('/img', (req, res) => {
@@ -102,7 +102,7 @@ router.get('/img', (req, res) => {
 	});
 });
 
-/*
+/**
  * Add an item
  * The POST request should be multi-part/form-data
  *
