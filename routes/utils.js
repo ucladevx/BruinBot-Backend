@@ -20,8 +20,8 @@ function degToRad(degrees) {
  *
  * @returns {number} Distance between two points on a globe
  */
-function coordDistanceKM(lat1, lon1, lat2, lon2) {
-	let radiusKM = 6371;
+function coordDistanceM(lat1, lon1, lat2, lon2) {
+	let radiusM = 6371e3;
 	let lat1rad = degToRad(lat1);
 	let lon1rad = degToRad(lon1);
 	let lat2rad = degToRad(lat2);
@@ -29,8 +29,8 @@ function coordDistanceKM(lat1, lon1, lat2, lon2) {
 	let u = Math.sin((lat2rad - lat1rad) / 2);
 	let v = Math.sin((lon2rad - lon1rad) / 2);
 	let x = Math.sqrt(u * u + Math.cos(lat1rad) * Math.cos(lat2rad) * v * v);
-	return 2.0 * radiusKM * Math.asin(x);
+	return 2.0 * radiusM * Math.asin(x);
 }
 
 exports.degToRad = degToRad;
-exports.coordDistanceKM = coordDistanceKM;
+exports.coordDistanceM = coordDistanceM;

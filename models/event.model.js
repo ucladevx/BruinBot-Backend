@@ -1,7 +1,4 @@
 const mongoose = require('mongoose');
-const bruinbot = require('./bruinbot.model.js');
-const user = require('./user.model.js');
-const item = require('./item.model.js');
 
 const schema = mongoose.Schema;
 
@@ -14,19 +11,19 @@ const eventSchema = new schema({
 		sparse: true,
 	},
 	items: {
-		type: [item.schema],
+		type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
 		required: true,
-		unique: false,
+		unique: true,
 		sparse: true,
 	},
 	bots: {
-		type: [bruinbot.schema],
+		type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BruinBot' }],
 		required: true,
 		unique: false,
 		sparse: true,
 	},
 	admins: {
-		type: [user.schema],
+		type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 		required: true,
 		unique: false,
 		sparse: true,

@@ -20,6 +20,10 @@ const bruinBotSchema = new schema({
 		unique: true,
 		trim: true,
 	},
+	event_id: {
+		type: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+		required: false,
+	},
 });
 
 const BruinBot = mongoose.model('BruinBot', bruinBotSchema);

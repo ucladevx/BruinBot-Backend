@@ -18,6 +18,9 @@ const itemSchema = new schema(
 			type: String,
 			required: true,
 		},
+		event_id: {
+			type: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+		},
 	},
 	{
 		timestampes: true,

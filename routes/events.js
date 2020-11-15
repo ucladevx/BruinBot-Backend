@@ -2,6 +2,9 @@ const express = require('express');
 
 const eventsRouter = express.Router();
 let Event = require('../models/event.model');
+let Bots = require('../models/bruinbot.model');
+let Admins = require('../models/user.model');
+let Items = require('../models/item.model');
 
 /**
  * Gets all the events
@@ -13,7 +16,7 @@ eventsRouter.route('/').get((req, res) => {
 });
 
 /**
- * Gets items for an event by id
+ * Gets the list of item ids for an event by id
  */
 eventsRouter.route('/items').get((req, res) => {
 	const id = req.body.id;
@@ -25,12 +28,22 @@ eventsRouter.route('/items').get((req, res) => {
 	}
 
 	Event.findById(id)
-		.then((event) => res.json(event.items))
+		.then(async (event) => {
+			let items = [];
+			console.log(event.items);
+
+			for (const item_id of event.items) {
+				await Items.findById(item_id).then((item) => {
+					items.push(item);
+				});
+			}
+			res.json(items);
+		})
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
 /**
- * Gets bots for an event by id
+ * Gets the list of bot ids for an event by id
  */
 eventsRouter.route('/bots').get((req, res) => {
 	const id = req.body.id;
@@ -42,12 +55,21 @@ eventsRouter.route('/bots').get((req, res) => {
 	}
 
 	Event.findById(id)
-		.then((event) => res.json(event.bots))
+		.then(async (event) => {
+			let bots = [];
+
+			for (const bot_id of event.bots) {
+				await Bots.findById(bot_id).then((bot) => {
+					bots.push(bot);
+				});
+			}
+			res.json(bots);
+		})
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
 /**
- * Gets admins for an event by id
+ * Gets the list of admin ids for an event by id
  */
 eventsRouter.route('/admins').get((req, res) => {
 	const id = req.body.id;
@@ -59,31 +81,40 @@ eventsRouter.route('/admins').get((req, res) => {
 	}
 
 	Event.findById(id)
-		.then((event) => res.json(event.admins))
+		.then(async (event) => {
+			let admins = [];
+
+			for (const admin_id of event.admins) {
+				await Admins.findById(admin_id).then((admin) => {
+					admins.push(admin);
+				});
+			}
+			res.json(admins);
+		})
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
 /**
- * Adds a new Event object with the name provided in the request body and any
- * other additional parameters like items, bots, admins
+ * Adds a new Event object with the name, list of bot ids, and list of admin ids
+ * provided in the request body and any
  */
 eventsRouter.route('/add').post((req, res) => {
-	const { name, items, bots, admins } = req.body;
+	const { name, bots, admins } = req.body;
 
-	if (!name || !items || !bots || !admins) {
+	if (!name || !bots || !admins) {
 		return res.status(400).json({
-			err: 'Please provide name, items, bots, and admins of the event.',
+			err: 'Please provide name, bots, and admins of the event.',
 		});
 	}
-	if (items.length == 0 || bots.length == 0 || admins.length == 0) {
+	if (bots.length == 0 || admins.length == 0) {
 		return res.status(400).json({
-			err: 'Items, bots, and admins cannot be empty',
+			err: 'The list of bot IDs and admin IDs cannot be empty',
 		});
 	}
 
 	const newEvent = new Event({
 		name: name,
-		items: items,
+		items: [],
 		bots: bots,
 		admins: admins,
 	});
@@ -95,11 +126,10 @@ eventsRouter.route('/add').post((req, res) => {
 });
 
 /**
- * Updates the list of bots with a new updated list of bots for an event
- * specified by id
+ * Adds a bot id to the list of bot ids to an event specified by id
  */
 eventsRouter.route('/bots').put((req, res) => {
-	const { id, bots } = req.body;
+	const { id, bot_id } = req.body;
 
 	if (!id) {
 		return res.status(400).json({
@@ -107,24 +137,23 @@ eventsRouter.route('/bots').put((req, res) => {
 		});
 	}
 
-	if (!bots) {
+	if (!bot_id) {
 		return res.status(400).json({
-			err: 'Please provide the updated list of bots',
+			err: 'Please provide the id of the bot.',
 		});
 	}
 
-	Event.updateOne({ _id: id }, { bots: bots }, function (err) {
+	Event.updateOne({ _id: id }, { $push: { bots: bot_id }}, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
-		else res.json('The bots of Event ' + id + ' was updated!');
+		else res.json('Bot ' + bot_id + ' was added to Event ' + id + '.');
 	});
 });
 
 /**
- * Updates the list of items with a new updated list of items for an event
- * specified by id
+ * Adds an item id to the list of item ids to an event specified by id
  */
 eventsRouter.route('/items').put((req, res) => {
-	const { id, items } = req.body;
+	const { id, item_id } = req.body;
 
 	if (!id) {
 		return res.status(400).json({
@@ -132,24 +161,23 @@ eventsRouter.route('/items').put((req, res) => {
 		});
 	}
 
-	if (!items) {
+	if (!item_id) {
 		return res.status(400).json({
-			err: 'Please provide the updated list of bots',
+			err: 'Please provide the id of the item.',
 		});
 	}
 
-	Event.updateOne({ _id: id }, { items: items }, function (err) {
+	Event.updateOne({ _id: id }, { $push: { items: item_id }}, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
-		else res.json('The items of Event ' + id + ' was updated!');
+		else res.json('Item ' + item_id + ' was added to Event ' + id + '.');
 	});
 });
 
 /**
- * Updates the list of admins with a new updated list of admins for an event
- * specified by id
+ * Adds an admin id to the list of admin ids to an event specified by id
  */
 eventsRouter.route('/admins').put((req, res) => {
-	const { id, admins } = req.body;
+	const { id, admin_id } = req.body;
 
 	if (!id) {
 		return res.status(400).json({
@@ -157,20 +185,15 @@ eventsRouter.route('/admins').put((req, res) => {
 		});
 	}
 
-	if (!admins) {
+	if (!admin_id) {
 		return res.status(400).json({
-			err: 'Please provide the updated list of bots',
+			err: 'Please provide the id of the admin.',
 		});
 	}
 
-	Event.updateOne({ _id: id }, { admins: admins }, function (err) {
+	Event.updateOne({ _id: id }, { $push: { admins: admin_id }}, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
-		else res.json('The admins of Event ' + id + ' was updated!');
-	});
-
-	Event.findByIdAndUpdate(id, { admins: admins }, function (err) {
-		if (err) res.status(400).json('Error: ' + err);
-		else res.json('The bots of Event ' + id + ' was updated!');
+		else res.json('Admin ' + admin_id + ' was added to Event ' + id + '.');
 	});
 });
 

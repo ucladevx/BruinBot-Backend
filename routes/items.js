@@ -46,7 +46,7 @@ const removeOneImage = async (filename) => {
 	gfs.delete(imgs[0]._id);
 };
 
-/*
+/**
  * Get a list of all items
  */
 router.get('/', (req, res) => {
@@ -55,7 +55,7 @@ router.get('/', (req, res) => {
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
-/*
+/**
  * Delete 1 item specified by item name
  */
 router.delete('/', (req, res) => {
@@ -78,7 +78,7 @@ router.delete('/', (req, res) => {
 		});
 });
 
-/*
+/**
  * Get image of item by the image's filename
  */
 router.get('/img', (req, res) => {
@@ -102,7 +102,7 @@ router.get('/img', (req, res) => {
 	});
 });
 
-/*
+/**
  * Add an item
  * The POST request should be multi-part/form-data
  *
@@ -114,11 +114,11 @@ router.post('/add', upload.single('img'), (req, res) => {
 			err: 'Please provide an image.',
 		});
 	}
-	const { name, price } = req.body;
-	if (!name || !price) {
+	const { name, price, event_id } = req.body;
+	if (!name || !price || !event_id) {
 		removeOneImage(req.file.originalname);
 		return res.status(404).json({
-			err: 'Please provide both name and price.',
+			err: 'Please provide name, price, and event id.',
 		});
 	}
 
@@ -126,6 +126,7 @@ router.post('/add', upload.single('img'), (req, res) => {
 		name: name,
 		price: price,
 		img: req.file.originalname,
+		event_id: event_id,
 	});
 
 	newItem
