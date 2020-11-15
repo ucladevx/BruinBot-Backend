@@ -32,7 +32,7 @@ router.route('/').delete((req, res) => {
         .catch(err => res.status(400).json('Error: ' + err));
 });
 
-router.route('/makeOragnizer').post((req, res) => {
+router.route('/makeOrganizer').post((req, res) => {
     User.findOne({firebase_id: req.body.firebase_id})
         .then(user => {
             user.isOrganizer = true;
@@ -42,7 +42,7 @@ router.route('/makeOragnizer').post((req, res) => {
         .catch(err => res.status(400).json('Error: ' + err));
 });
 
-router.route('/makeNotOragnizer').post((req, res) => {
+router.route('/removeOrganizer').post((req, res) => {
     User.findOne({firebase_id: req.body.firebase_id})
         .then(user => {
             user.isOrganizer = false;
