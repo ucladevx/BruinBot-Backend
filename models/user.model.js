@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const map = require("./map.model.js");
 
 const schema = mongoose.Schema;
 
@@ -10,6 +11,11 @@ const userSchema = new schema(
             unique: true,
             trim: true,
             minlength: 5,
+        },
+        isOrganizer: {
+            type: Boolean,
+            required: true,
+            default: false,
         },
         firebase_id: {
             type: String,
