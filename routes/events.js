@@ -143,7 +143,7 @@ eventsRouter.route('/bots').put((req, res) => {
 		});
 	}
 
-	Event.updateOne({ _id: id }, { $push: { bots: bot_id }}, function (err) {
+	Event.updateOne({ _id: id }, { $push: { bots: bot_id } }, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
 		else res.json('Bot ' + bot_id + ' was added to Event ' + id + '.');
 	});
@@ -167,7 +167,7 @@ eventsRouter.route('/items').put((req, res) => {
 		});
 	}
 
-	Event.updateOne({ _id: id }, { $push: { items: item_id }}, function (err) {
+	Event.updateOne({ _id: id }, { $push: { items: item_id } }, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
 		else res.json('Item ' + item_id + ' was added to Event ' + id + '.');
 	});
@@ -191,7 +191,7 @@ eventsRouter.route('/admins').put((req, res) => {
 		});
 	}
 
-	Event.updateOne({ _id: id }, { $push: { admins: admin_id }}, function (err) {
+	Event.updateOne({ _id: id }, { $push: { admins: admin_id } }, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
 		else res.json('Admin ' + admin_id + ' was added to Event ' + id + '.');
 	});
