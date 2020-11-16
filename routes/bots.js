@@ -51,28 +51,6 @@ botsRouter.route('/add').post((req, res) => {
  */
 
 /**
- * Update BruinBot object with specified id to have new event.
- */
-botsRouter.route('/updateEvent').put((req, res) => {
-	const { id, event_id } = req.body;
-
-	if (!id || !event_id) {
-		return res.status(400).json({
-			err: "Required id / event_id data not in request's body.",
-		});
-	}
-
-	BruinBot.findOneAndUpdate({ _id: id }, { event_id: event_id }, (err) => {
-		if (err) {
-			console.log(err);
-			res.status(400).send(err);
-		} else {
-			res.json('BruinBot ' + id + ' was updated.');
-		}
-	});
-});
-
-/**
  * Update BruinBot object with specified id to have new location.
  */
 botsRouter.route('/updateLocation').put((req, res) => {

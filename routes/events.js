@@ -16,7 +16,7 @@ eventsRouter.route('/').get((req, res) => {
 });
 
 /**
- * Gets the list of item ids for an event by id
+ * Gets the list of items for an event by id
  */
 eventsRouter.route('/items').get((req, res) => {
 	const id = req.body.id;
@@ -29,21 +29,14 @@ eventsRouter.route('/items').get((req, res) => {
 
 	Event.findById(id)
 		.then(async (event) => {
-			let items = [];
-			console.log(event.items);
-
-			for (const item_id of event.items) {
-				await Items.findById(item_id).then((item) => {
-					items.push(item);
-				});
-			}
+			let items = await Items.find().where('_id').in(event.items).exec();
 			res.json(items);
 		})
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
 /**
- * Gets the list of bot ids for an event by id
+ * Gets the list of bots for an event by id
  */
 eventsRouter.route('/bots').get((req, res) => {
 	const id = req.body.id;
@@ -56,20 +49,14 @@ eventsRouter.route('/bots').get((req, res) => {
 
 	Event.findById(id)
 		.then(async (event) => {
-			let bots = [];
-
-			for (const bot_id of event.bots) {
-				await Bots.findById(bot_id).then((bot) => {
-					bots.push(bot);
-				});
-			}
+			let bots = await Bots.find().where('_id').in(event.bots).exec();
 			res.json(bots);
 		})
 		.catch((err) => res.status(400).json('Error: ' + err));
 });
 
 /**
- * Gets the list of admin ids for an event by id
+ * Gets the list of admins for an event by id
  */
 eventsRouter.route('/admins').get((req, res) => {
 	const id = req.body.id;
@@ -82,13 +69,7 @@ eventsRouter.route('/admins').get((req, res) => {
 
 	Event.findById(id)
 		.then(async (event) => {
-			let admins = [];
-
-			for (const admin_id of event.admins) {
-				await Admins.findById(admin_id).then((admin) => {
-					admins.push(admin);
-				});
-			}
+			let admins = await Admins.find().where('_id').in(event.admins).exec();
 			res.json(admins);
 		})
 		.catch((err) => res.status(400).json('Error: ' + err));
@@ -96,17 +77,17 @@ eventsRouter.route('/admins').get((req, res) => {
 
 /**
  * Adds a new Event object with the name, list of bot ids, and list of admin ids
- * provided in the request body and any
+ * provided in the request body
  */
 eventsRouter.route('/add').post((req, res) => {
-	const { name, bots, admins } = req.body;
+	const { name, bots_ids, admins_ids } = req.body;
 
-	if (!name || !bots || !admins) {
+	if (!name || !bots_ids || !admins_ids) {
 		return res.status(400).json({
 			err: 'Please provide name, bots, and admins of the event.',
 		});
 	}
-	if (bots.length == 0 || admins.length == 0) {
+	if (bots_ids.length == 0 || admins_ids.length == 0) {
 		return res.status(400).json({
 			err: 'The list of bot IDs and admin IDs cannot be empty',
 		});
@@ -115,8 +96,8 @@ eventsRouter.route('/add').post((req, res) => {
 	const newEvent = new Event({
 		name: name,
 		items: [],
-		bots: bots,
-		admins: admins,
+		bots: bots_ids,
+		admins: admins_ids,
 	});
 
 	newEvent
@@ -167,7 +148,7 @@ eventsRouter.route('/items').put((req, res) => {
 		});
 	}
 
-	Event.updateOne({ _id: id }, { $push: { items: item_id } }, function (err) {
+	Event.updateOne({ _id: id }, { $push: { items: item_id }}, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
 		else res.json('Item ' + item_id + ' was added to Event ' + id + '.');
 	});
@@ -191,7 +172,7 @@ eventsRouter.route('/admins').put((req, res) => {
 		});
 	}
 
-	Event.updateOne({ _id: id }, { $push: { admins: admin_id } }, function (err) {
+	Event.updateOne({ _id: id }, { $push: { admins: admin_id }}, function (err) {
 		if (err) res.status(400).json('Error: ' + err);
 		else res.json('Admin ' + admin_id + ' was added to Event ' + id + '.');
 	});

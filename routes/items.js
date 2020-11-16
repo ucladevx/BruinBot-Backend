@@ -114,11 +114,11 @@ router.post('/add', upload.single('img'), (req, res) => {
 			err: 'Please provide an image.',
 		});
 	}
-	const { name, price, event_id } = req.body;
-	if (!name || !price || !event_id) {
+	const { name, price } = req.body;
+	if (!name || !price) {
 		removeOneImage(req.file.originalname);
 		return res.status(404).json({
-			err: 'Please provide name, price, and event id.',
+			err: 'Please provide name and price.',
 		});
 	}
 
@@ -126,7 +126,6 @@ router.post('/add', upload.single('img'), (req, res) => {
 		name: name,
 		price: price,
 		img: req.file.originalname,
-		event_id: event_id,
 	});
 
 	newItem
