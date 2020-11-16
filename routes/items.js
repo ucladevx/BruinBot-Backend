@@ -118,7 +118,7 @@ router.post('/add', upload.single('img'), (req, res) => {
 	if (!name || !price) {
 		removeOneImage(req.file.originalname);
 		return res.status(404).json({
-			err: 'Please provide both name and price.',
+			err: 'Please provide name and price.',
 		});
 	}
 
