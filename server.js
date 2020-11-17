@@ -27,6 +27,7 @@ connection.once('open', () => {
 const usersRouter = require('./routes/users');
 const botsRouter = require('./routes/bots');
 const itemsRouter = require('./routes/items');
+const eventsRouter = require('./routes/events');
 
 app.get('/', function (req, res) {
 	res.send('Welcome to BruinBot API!');
@@ -35,6 +36,7 @@ app.get('/', function (req, res) {
 app.use('/users', usersRouter);
 app.use('/bots', botsRouter);
 app.use('/items', itemsRouter);
+app.use('/events', eventsRouter);
 
 app.listen(port, () => {
 	console.log(`This server is running on port ${port}!`);
