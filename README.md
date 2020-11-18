@@ -25,5 +25,5 @@ npx nodemon server.js
 
 Useful: check to see if your code is formatted and documented properly by running eslint!
 ```
-npm run eslint
+npm run lint
 ```
