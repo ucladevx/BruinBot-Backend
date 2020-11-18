@@ -1,10 +1,13 @@
 const express = require('express');
-const mongoose = require('mongoose');
-var multer = require('multer');
-const GridFsStorage = require('multer-gridfs-storage');
 
 const router = express.Router();
+
+let mongoose = require('mongoose');
+let multer = require('multer');
+let GridFsStorage = require('multer-gridfs-storage');
+
 let Item = require('../models/item.model');
+let Event = require('../models/event.model');
 
 const uri = process.env.ATLAS_URI;
 const connection = mongoose.connection;
@@ -35,16 +38,9 @@ const storage = new GridFsStorage({
 
 const upload = multer({ storage });
 
-/*
- * Remove an image with name filename from database
+/**
+ * ----------------- GET (return information about objects) ----------------
  */
-const removeOneImage = async (filename) => {
-	const imgs = await gfs.find({ filename }).toArray();
-	if (!imgs || !imgs.length) {
-		return;
-	}
-	gfs.delete(imgs[0]._id);
-};
 
 /**
  * Get a list of all items
@@ -53,29 +49,6 @@ router.get('/', (req, res) => {
 	Item.find()
 		.then((items) => res.json(items))
 		.catch((err) => res.status(400).json('Error: ' + err));
-});
-
-/**
- * Delete 1 item specified by item name
- */
-router.delete('/', (req, res) => {
-	const { name } = req.query;
-	if (!name) {
-		return res.status(404).json({
-			err: 'Please provide a name to delete',
-		});
-	}
-
-	Item.findOne({ name })
-		.then(async (item) => {
-			const { img, _id } = item;
-			await Item.deleteOne({ _id });
-			await removeOneImage(img);
-			return res.send(`${name} is removed!`);
-		})
-		.catch((err) => {
-			return res.status(400).json(err);
-		});
 });
 
 /**
@@ -103,7 +76,11 @@ router.get('/img', (req, res) => {
 });
 
 /**
- * Add an item
+ * ------------------------- POST (add new objects) -------------------------
+ */
+
+/**
+ * Adds an item
  * The POST request should be multi-part/form-data
  *
  * See how GridFS works in Notion Wiki
@@ -114,11 +91,13 @@ router.post('/add', upload.single('img'), (req, res) => {
 			err: 'Please provide an image.',
 		});
 	}
-	const { name, price } = req.body;
-	if (!name || !price) {
+
+	const { name, price, eventId } = req.body;
+
+	if (!name || !price || !eventId) {
 		removeOneImage(req.file.originalname);
 		return res.status(404).json({
-			err: 'Please provide name and price.',
+			err: 'Please provide name, price, and eventId.',
 		});
 	}
 
@@ -128,13 +107,64 @@ router.post('/add', upload.single('img'), (req, res) => {
 		img: req.file.originalname,
 	});
 
-	newItem
-		.save()
-		.then(() => res.json('Item ' + name + ' was added!'))
+	Event.findByIdAndUpdate(eventId, { $push: { items: newItem } })
+		.then(() => newItem.save())
+		.then((item) => {
+			console.log(`Successfully added item: ${item}`);
+			res.json(item);
+		})
 		.catch((err) => {
-			removeOneImage(req.file.originalname);
-			return res.status(400).json(err);
+			console.log(`Failed to add item.`);
+			res.status(400).send(`Unable to create item "${name}"`, err);
+		});
+});
+
+/**
+ * ------------------------- DELETE (remove objects) ------------------------
+ */
+
+/**
+ * Delete item specified by item id
+ */
+router.delete('/', (req, res) => {
+	const itemId = req.body.id;
+
+	if (!itemId) {
+		res.status(400).send('Required itemId not provided in requets body.');
+	}
+
+	Item.findById(itemId)
+		.then(async (item) => {
+			const { img, _id } = item;
+			await Item.deleteOne({ _id });
+			await removeOneImage(img);
+
+			console.log(`Successfully deleted item: ${item}`);
+			res.json(`Sucessfully removed item ${itemId}`);
+		})
+		.catch((err) => {
+			console.log(`Failed to delete item ${itemId}`);
+			res.status(400).send(err);
 		});
 });
 
 module.exports = router;
+
+/**
+ * ---------------------------- Helper functions ----------------------------
+ */
+
+/**
+ * Remove an image with name filename from database
+ *
+ * @param {string} fileName Name of the image file to be deleted
+ */
+async function removeOneImage(fileName) {
+	const imgs = await gfs.find({ fileName }).toArray();
+	if (!imgs || !imgs.length) {
+		console.log(`Could not delete image file with with name ${fileName}.`);
+	} else {
+		console.log(`Successfully deleted image file ${fileName}.`);
+		gfs.delete(imgs[0]._id);
+	}
+}
