@@ -1,10 +1,15 @@
 const express = require('express');
 
 const eventsRouter = express.Router();
+
 let Event = require('../models/event.model');
-let Bots = require('../models/bruinbot.model');
+let { BruinBot } = require('../models/bruinbot.model');
 let Admins = require('../models/user.model');
 let Items = require('../models/item.model');
+
+/**
+ * ----------------- GET (return information about objects) ----------------
+ */
 
 /**
  * Gets all the events
@@ -36,20 +41,27 @@ eventsRouter.route('/items').get((req, res) => {
 });
 
 /**
- * Gets the list of bots for an event by id
+ * Gets the enriched list of bots (actual items, not just item_ids) for an event by id
  */
 eventsRouter.route('/bots').get((req, res) => {
-	const id = req.body.id;
+	const eventId = req.body.id;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json({
 			err: 'Please provide the id of the event.',
 		});
 	}
 
-	Event.findById(id)
+	Event.findById(eventId)
 		.then(async (event) => {
-			let bots = await Bots.find().where('_id').in(event.bots).exec();
+			let bots = await BruinBot.find()
+				.populate({
+					path: 'inventory.item',
+					model: 'Item',
+				})
+				.where('_id')
+				.in(event.bots)
+				.exec();
 			res.json(bots);
 		})
 		.catch((err) => res.status(400).json('Error: ' + err));
@@ -76,28 +88,38 @@ eventsRouter.route('/admins').get((req, res) => {
 });
 
 /**
+ * ------------------------- POST (add new objects) -------------------------
+ */
+
+/**
  * Adds a new Event object with the name, list of bot ids, and list of admin ids
  * provided in the request body
  */
 eventsRouter.route('/add').post((req, res) => {
-	const { name, bots_ids, admins_ids } = req.body;
+	const { name, bot_ids, admin_ids } = req.body;
 
-	if (!name || !bots_ids || !admins_ids) {
+	if (!name || !bot_ids || !admin_ids) {
 		return res.status(400).json({
 			err: 'Please provide name, bots, and admins of the event.',
 		});
 	}
-	if (bots_ids.length == 0 || admins_ids.length == 0) {
+
+	if (bot_ids.length == 0 || admin_ids.length == 0) {
 		return res.status(400).json({
 			err: 'The list of bot IDs and admin IDs cannot be empty',
 		});
 	}
 
+	let item_ids = req.body.item_ids;
+	if (!item_ids) {
+		item_ids = [];
+	}
+
 	const newEvent = new Event({
 		name: name,
-		items: [],
-		bots: bots_ids,
-		admins: admins_ids,
+		items: item_ids,
+		bots: bot_ids,
+		admins: admin_ids,
 	});
 
 	newEvent
@@ -107,7 +129,11 @@ eventsRouter.route('/add').post((req, res) => {
 });
 
 /**
- * Adds a bot id to the list of bot ids to an event specified by id
+ * --------------------- PUT (update existing objects) ----------------------
+ */
+
+/**
+ * Adds a bot id to an event
  */
 eventsRouter.route('/bots').put((req, res) => {
 	const { id, bot_id } = req.body;
@@ -131,7 +157,7 @@ eventsRouter.route('/bots').put((req, res) => {
 });
 
 /**
- * Adds an item id to the list of item ids to an event specified by id
+ * Adds an item id to an event
  */
 eventsRouter.route('/items').put((req, res) => {
 	const { id, item_id } = req.body;
@@ -179,15 +205,31 @@ eventsRouter.route('/admins').put((req, res) => {
 });
 
 /**
+ * ------------------------- DELETE (remove objects) ------------------------
+ */
+
+/**
  * Deletes an event by id
+ *
+ * TODO: figure out how to handle the event being successfully deleted but its items
+ * failing to delete, leaving stranded items in the database
  */
 eventsRouter.route('/').delete((req, res) => {
-	const id = req.body.id;
+	const eventId = req.body.id;
 
-	Event.findById(id)
-		.then((event) => event.remove())
-		.then(() => res.json('Event ' + id + ' was deleted!'))
-		.catch((err) => res.status(400).json('Error: ' + err));
+	Event.findByIdAndDelete(eventId)
+		.then((event) => {
+			console.log(`Successfully deleted event: ${event}`);
+			return Items.deleteMany({ _id: { $in: event.items } });
+		})
+		.then((result) => {
+			console.log(`Successfully deleted event's items: ${result}`);
+			res.json(`Succesfully deleted event's items.`);
+		})
+		.catch((err) => {
+			console.log(`Failed to delete event ${eventId}`, err);
+			res.status(400).json('Error: ' + err);
+		});
 });
 
 module.exports = eventsRouter;

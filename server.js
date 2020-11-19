@@ -13,6 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+mongoose.set('useFindAndModify', false);
+
 const uri = process.env.ATLAS_URI;
 mongoose.connect(uri, {
 	useNewUrlParser: true,
