@@ -32,7 +32,7 @@ const itemsRouter = require('./routes/items');
 const eventsRouter = require('./routes/events');
 
 app.get('/', function (req, res) {
-	res.send('Welcome to BruinBot API!');
+	res.json('Welcome to BruinBot API!');
 });
 
 app.use('/users', usersRouter);
