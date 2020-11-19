@@ -13,6 +13,12 @@ const locationSchema = new schema({
 	},
 });
 
+/**
+ * Represents a terminal node of one of the paths on the map. If this node
+ * corresponds to an actual landmark, such as Powell Library, it can have a
+ * name. Otherwise, if it is just a intermediary terminal node, keep the name
+ * empty.
+ */
 const mapNodeSchema = new schema({
 	location: {
 		type: locationSchema,
@@ -20,20 +26,27 @@ const mapNodeSchema = new schema({
 	},
 	name: {
 		type: String,
-		required: true,
-		default: '',
 	},
 });
 
+/**
+ * NodeA and NodeB represent the two terminal nodes. 'points' will be all the
+ * nodes between and excluding NodeA and NodeB.
+ */
 const pathSchema = new schema({
 	points: {
 		type: [locationSchema],
 		required: true,
 	},
-	currentPointIndex: {
-		type: Number,
+	nodeA: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'MapNode',
 		required: true,
-		default: 0,
+	},
+	nodeB: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'MapNode',
+		required: true,
 	},
 });
 

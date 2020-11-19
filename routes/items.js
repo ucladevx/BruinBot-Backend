@@ -86,9 +86,9 @@ router.post('/add', upload.single('img'), (req, res) => {
 		return res.status(404).json('Please provide an image.');
 	}
 
-	const { name, price, eventId } = req.body;
+	const { name, price, eventId, weight } = req.body;
 
-	if (!name || !price || !eventId) {
+	if (!name || !price || !eventId || !weight) {
 		removeOneImage(req.file.originalname);
 		return res.status(404).json('Please provide name, price, and eventId.');
 	}
@@ -97,6 +97,7 @@ router.post('/add', upload.single('img'), (req, res) => {
 		name: name,
 		price: price,
 		img: req.file.originalname,
+		weight: weight,
 	});
 
 	Event.findByIdAndUpdate(eventId, { $push: { items: newItem } })
