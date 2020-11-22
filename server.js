@@ -20,7 +20,6 @@ mongoose.set('useFindAndModify', false);
 
 // There exists a separate database for testing
 let uri = process.env.ATLAS_URI;
-console.log(uri);
 if (process.env.NODE_ENV === 'test') {
 	console.log('Testing...');
 	uri = process.env.ATLAS_URI_TEST;
