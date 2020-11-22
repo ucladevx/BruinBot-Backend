@@ -21,4 +21,9 @@ jobs:
         run: npm ci
       - name: Run ESLint
         run: npm run lint
+      - name: Run Mocha tests
+        env:
+          NODE_ENV: test
+          ATLAS_URI_TEST: ${{ secrets.ATLAS_URI_TEST }}
+        run: npm test
         

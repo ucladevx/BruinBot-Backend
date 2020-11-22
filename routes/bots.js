@@ -83,7 +83,7 @@ botsRouter.route('/location').get((req, res) => {
  * Adds a new BruinBot object to the FleetManager's bot array with a Location
  * and name as provided in the request's body.
  */
-botsRouter.route('/add').post((req, res) => {
+botsRouter.route('/').post((req, res) => {
 	const name = req.body.name;
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
