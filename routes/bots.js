@@ -253,7 +253,7 @@ function findBotCoords(bots, lat, lon) {
 	let smallestDistance = Infinity;
 	let currentDistance = undefined;
 
-	// For all bots that are, first find their distance from the provided coordinates
+	// For all bots, first find their distance from the provided coordinates
 	for (var b of bots) {
 		currentDistance = util.coordDistanceM(
 			lat,
