@@ -10,20 +10,16 @@ npm ci
 
 Create .env file in root directory with the following enviornment variables:
 ```
-ATLAS_URI=<Your Atlas URI>
+ATLAS_URI_TEST=<Your Atlas test URI>
 ```
 
-Run server
+Start the server
 ```
-node server.js
-```
-
-Recommended: run server with nodemon (automatic server restart everytime code is changed)
-```
-npx nodemon server.js
+npm run dev
 ```
 
-Useful: check to see if your code is formatted and documented properly by running eslint!
+Make sure your code passes the style linter! Check for mistakes and fix some of them automatically:
 ```
 npm run lint
+npm run lint:fix
 ```

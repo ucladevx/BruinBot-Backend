@@ -18,6 +18,10 @@ const itemSchema = new schema(
 			type: String,
 			required: true,
 		},
+		weight: {
+			type: Number,
+			required: true,
+		},
 	},
 	{
 		timestampes: true,
