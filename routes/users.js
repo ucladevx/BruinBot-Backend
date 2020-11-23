@@ -34,23 +34,27 @@ router.route('/').delete((req, res) => {
 });
 
 router.route('/makeOrganizer').post((req, res) => {
-    User.findOne({firebase_id: req.body.firebase_id})
-        .then(user => {
-            user.isOrganizer = true;
-            user.save();
-        })
-        .then(() => res.json("User " + req.body.firebase_id + " was made organizer!"))
-        .catch(err => res.status(400).json(err));
+	User.findOne({ firebase_id: req.body.firebase_id })
+		.then((user) => {
+			user.isOrganizer = true;
+			user.save();
+		})
+		.then(() =>
+			res.json('User ' + req.body.firebase_id + ' was made organizer!')
+		)
+		.catch((err) => res.status(400).json(err));
 });
 
 router.route('/removeOrganizer').post((req, res) => {
-    User.findOne({firebase_id: req.body.firebase_id})
-        .then(user => {
-            user.isOrganizer = false;
-            user.save();
-        })
-        .then(() => res.json("User " + req.body.firebase_id + " was made not an organizer!"))
-        .catch(err => res.status(400).json(err));
+	User.findOne({ firebase_id: req.body.firebase_id })
+		.then((user) => {
+			user.isOrganizer = false;
+			user.save();
+		})
+		.then(() =>
+			res.json('User ' + req.body.firebase_id + ' was made not an organizer!')
+		)
+		.catch((err) => res.status(400).json(err));
 });
 
 module.exports = router;
