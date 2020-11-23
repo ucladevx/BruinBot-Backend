@@ -9,7 +9,12 @@ let GridFsStorage = require('multer-gridfs-storage');
 let Item = require('../models/item.model');
 let Event = require('../models/event.model');
 
-const uri = process.env.ATLAS_URI;
+// There exists a separate database for testing
+let uri = process.env.ATLAS_URI;
+if (process.env.NODE_ENV === 'test') {
+	uri = process.env.ATLAS_URI_TEST;
+}
+
 const connection = mongoose.connection;
 
 let gfs;
@@ -48,7 +53,7 @@ const upload = multer({ storage });
 router.get('/', (req, res) => {
 	Item.find()
 		.then((items) => res.json(items))
-		.catch((err) => res.status(400).json('Error: ' + err));
+		.catch((err) => res.status(400).json(err));
 });
 
 /**
@@ -57,18 +62,14 @@ router.get('/', (req, res) => {
 router.get('/img', (req, res) => {
 	const { img } = req.query;
 	if (!img) {
-		return res.status(404).json({
-			err: 'Please provide an image filename.',
-		});
+		return res.status(404).json('Please provide an image filename.');
 	}
 	const downloadStream = gfs.openDownloadStreamByName(img);
 	downloadStream.on('data', (chunk) => {
 		res.write(chunk);
 	});
 	downloadStream.on('error', () => {
-		res.status(404).json({
-			err: 'Something went wrong when retrieving the image...',
-		});
+		res.status(404).json('Something went wrong when retrieving the image...');
 	});
 	downloadStream.on('end', () => {
 		res.end();
@@ -87,25 +88,21 @@ router.get('/img', (req, res) => {
  */
 router.post('/add', upload.single('img'), (req, res) => {
 	if (!req.file) {
-		return res.status(404).json({
-			err: 'Please provide an image.',
-		});
+		return res.status(404).json('Please provide an image.');
 	}
 
-	const { name, price, eventId, weight } = req.body;
+	const { name, price, eventId } = req.body;
 
-	if (!name || !price || !eventId || !weight) {
+	if (!name || !price || !eventId) {
 		removeOneImage(req.file.originalname);
-		return res.status(404).json({
-			err: 'Please provide name, price, weight, and eventId.',
-		});
+		return res.status(404).json('Please provide name, price, and eventId.');
 	}
 
 	const newItem = new Item({
 		name: name,
 		price: price,
 		img: req.file.originalname,
-		weight: weight,
+		weight: 0.0,
 	});
 
 	Event.findByIdAndUpdate(eventId, { $push: { items: newItem } })
@@ -115,9 +112,31 @@ router.post('/add', upload.single('img'), (req, res) => {
 			res.json(item);
 		})
 		.catch((err) => {
-			console.log(`Failed to add item.`);
-			res.status(400).send(`Unable to create item "${name}"`, err);
+			console.log('Error: ' + err);
+			res.status(400).json(err);
 		});
+});
+
+/**
+ * ------------------------- PUT (update existing objects) ------------------------
+ */
+
+/**
+ * Update weight of item specified by item id
+ */
+router.route('/weight').put((req, res) => {
+	const { itemId, weight } = req.body;
+
+	if (!itemId || !weight) {
+		res
+			.status(400)
+			.json("Required itemId and/or weight not provided in request's body.");
+	}
+
+	Item.findByIdAndUpdate(itemId, { weight: weight }, function (err) {
+		if (err) res.status(400).json(err);
+		else res.json('Weight successfully updated for Item ' + itemId + '.');
+	});
 });
 
 /**
@@ -131,21 +150,21 @@ router.delete('/', (req, res) => {
 	const itemId = req.body.id;
 
 	if (!itemId) {
-		res.status(400).send('Required itemId not provided in requets body.');
+		res.status(400).json('Required itemId not provided in requets body.');
 	}
 
 	Item.findById(itemId)
 		.then(async (item) => {
 			const { img, _id } = item;
-			await Item.deleteOne({ _id });
+			await Item.findByIdAndDelete(_id);
 			await removeOneImage(img);
 
 			console.log(`Successfully deleted item: ${item}`);
 			res.json(`Sucessfully removed item ${itemId}`);
 		})
 		.catch((err) => {
-			console.log(`Failed to delete item ${itemId}`);
-			res.status(400).send(err);
+			console.log('Error: ' + err);
+			res.status(400).json(err);
 		});
 });
 
@@ -163,7 +182,9 @@ module.exports = router;
 async function removeOneImage(fileName) {
 	const imgs = await gfs.find({ fileName }).toArray();
 	if (!imgs || !imgs.length) {
-		console.log(`Could not delete image file with with name ${fileName}.`);
+		console.log(
+			`Error: Could not delete image file with with name ${fileName}.`
+		);
 	} else {
 		console.log(`Successfully deleted image file ${fileName}.`);
 		gfs.delete(imgs[0]._id);
