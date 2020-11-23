@@ -39,7 +39,7 @@ router.route('/makeOrganizer').post((req, res) => {
             user.save();
         })
         .then(() => res.json("User " + req.body.firebase_id + " was made organizer!"))
-        .catch(err => res.status(400).json('Error: ' + err));
+        .catch(err => res.status(400).json(err));
 });
 
 router.route('/removeOrganizer').post((req, res) => {
@@ -49,9 +49,7 @@ router.route('/removeOrganizer').post((req, res) => {
             user.save();
         })
         .then(() => res.json("User " + req.body.firebase_id + " was made not an organizer!"))
-        .catch(err => res.status(400).json('Error: ' + err));
+        .catch(err => res.status(400).json(err));
 });
-
-router.route('/')
 
 module.exports = router;
