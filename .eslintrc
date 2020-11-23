@@ -1,0 +1,27 @@
+{
+	"parser": "esprima",
+	"env": {
+        "mocha": true
+    },
+	"extends": [
+		"eslint:recommended",
+		"plugin:node/recommended",
+		"plugin:prettier/recommended",
+		"plugin:jsdoc/recommended"
+	],
+	"rules": {
+		"no-unused-vars": [
+			"error",
+			{
+				"argsIgnorePattern": "^_"
+			}
+		]
+	},
+	"overrides": [{
+		"files": "./test/*.js",
+		"rules": {
+			"node/no-unpublished-require": 0,
+			"node/no-missing-require": 0
+		}
+	}]
+}
