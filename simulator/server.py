@@ -9,6 +9,7 @@ baseURL = "http://localhost:5000"
 
 random.seed(time.time())
 
+# id of the bot this server manages as identified on MongoDB
 botId = ""
 
 # shared memory between processes
@@ -44,7 +45,7 @@ def main_loop(loop, latitude, longitude):
 
 
 if __name__ == "__main__":
-    # create and start process hosting the onboard continuous loop
+    # create and start process that hosts the onboard continuous loop
     operation_process = Process(
         target=main_loop, args=(loop, latitude, longitude))
     operation_process.start()
