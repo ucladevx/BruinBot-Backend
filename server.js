@@ -25,11 +25,6 @@ if (process.env.NODE_ENV === 'test') {
 	uri = process.env.ATLAS_URI_TEST;
 }
 
-// Supress console output for testing
-if (process.env.NODE_ENV !== 'test') {
-	app.use(express.logger());
-}
-
 mongoose.connect(uri, {
 	useNewUrlParser: true,
 	useCreateIndex: true,

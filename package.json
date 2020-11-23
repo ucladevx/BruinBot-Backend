@@ -5,9 +5,13 @@
   "scripts": {
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --fix --ext .js",
-    "dev": "export NODE_ENV=dev && npx nodemon server.js",
+    "dev": "run-script-os",
+    "dev:win32": "set NODE_ENV=dev && npx nodemon server.js",
+    "dev:default": "export NODE_ENV=dev && npx nodemon server.js",
     "start": "node server.js",
-    "test": "export NODE_ENV=test && mocha --timeout 10000 --exit"
+    "test":  "run-script-os",
+    "test:win32": "set NODE_ENV=test && mocha --timeout 10000 --exit",  
+    "test:default": "export NODE_ENV=test && mocha --timeout 10000 --exit"
   },
   "keywords": [],
   "author": "Jack Zhang",
@@ -32,6 +36,7 @@
     "mocha": "^8.2.1",
     "mocha-suppress-logs": "^0.2.0",
     "nodemon": "^2.0.2",
-    "prettier": "^2.1.2"
+    "prettier": "^2.1.2",
+    "run-script-os": "^1.1.3"
   }
 }

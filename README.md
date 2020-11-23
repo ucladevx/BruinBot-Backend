@@ -23,3 +23,8 @@ Make sure your code passes the style linter! Check for mistakes and fix some of 
 npm run lint
 npm run lint:fix
 ```
+
+Run Mocha tests
+```
+npm test
+```
