@@ -11,6 +11,11 @@ const userSchema = new schema(
 			trim: true,
 			minlength: 5,
 		},
+		isOrganizer: {
+			type: Boolean,
+			required: true,
+			default: false,
+		},
 		firebase_id: {
 			type: String,
 			required: true,
