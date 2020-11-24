@@ -11,3 +11,7 @@ node_modules
 
 # mac OS
 *.DS_Store
+
+# Istanbul
+.nyc_output/
+coverage/ 
