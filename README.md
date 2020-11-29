@@ -2,7 +2,6 @@
 Our backend stack consists of Express + Mongoose. Refer to our [notion page](https://www.notion.so/uclabruinbot/Backend-dcd2a56527e34f87a697e8b54c52ce96) for more details. Our frontend repo can be found [here](https://github.com/ucladevx/BruinBot-Frontend).
 
 ### Set up instructions:
-
 Install node dependencies
 ```
 npm ci
@@ -28,3 +27,8 @@ Run Mocha tests
 ```
 npm test
 ```
+
+## Deployment
+Software is deployed to AWS EC2 on every new release. 
+
+Login as an IAM user to our AWS console: https://uclabruinbot.signin.aws.amazon.com/console
