@@ -9,8 +9,16 @@ baseURL = "http://localhost:5000"
 
 random.seed(time.time())
 
-# id of the bot this server manages as identified on MongoDB
-botId = ""
+# String id of the bot this server manages as identified on MongoDB; defaults to None
+botId = None
+
+# reads in bot id from saved file; errors if no such file present; if id is not
+# valid, the bot will run without updating database
+botid_file = open('.botid')
+try:
+    botId = botid_file.readline()
+finally:
+    botid_file.close()
 
 # shared memory between processes
 # https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
