@@ -1,13 +1,14 @@
 # BruinBot Simulator
 
-This Flask server simulates a single bot.
+This Flask server simulates a single bot. 
 
 ### Set up instructions:
+**Make sure you are using Python 3!**
 
 Set up virtual environment
 
 ```
-python3 -m venv env
+python -m venv env
 ```
 
 Activate virtual environment
@@ -16,7 +17,12 @@ Activate virtual environment
 - Windows (Bash): `source env/Scripts/activate`
 - macOS: `source env/bin/activate`
 
-Install Python modules
+Deactivate virtual environment
+```
+deactivate
+```
+
+Install Python modules (equivalent of running `npm ci`)
 
 ```
 pip install -r requirements.txt
@@ -25,5 +31,5 @@ pip install -r requirements.txt
 Run Flask server
 
 ```
-python3 server.py
+python server.py
 ```
