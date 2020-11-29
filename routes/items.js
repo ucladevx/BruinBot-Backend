@@ -18,30 +18,31 @@ if (process.env.NODE_ENV === 'test') {
 const connection = mongoose.connection;
 
 let gfs;
+let upload = multer();
 connection.once('open', () => {
 	gfs = new mongoose.mongo.GridFSBucket(connection.db, {
 		bucketName: 'itemimages',
 	});
-});
 
-const storage = new GridFsStorage({
-	url: uri,
-	file: (req, file) => {
-		return new Promise((resolve, reject) => {
-			if (!file || !file.originalname) {
-				reject({ err: 'No file found...' });
-			}
-			const filename = file.originalname;
-			const fileInfo = {
-				filename: filename,
-				bucketName: 'itemimages',
-			};
-			resolve(fileInfo);
-		});
-	},
-});
+	let storage = new GridFsStorage({
+		db: connection,
+		file: (req, file) => {
+			return new Promise((resolve, reject) => {
+				if (!file || !file.originalname) {
+					reject({ err: 'No file found...' });
+				}
+				const filename = file.originalname;
+				const fileInfo = {
+					filename: filename,
+					bucketName: 'itemimages',
+				};
+				resolve(fileInfo);
+			});
+		},
+	});
 
-const upload = multer({ storage });
+	upload = multer({ storage });
+});
 
 /**
  * ----------------- GET (return information about objects) ----------------
