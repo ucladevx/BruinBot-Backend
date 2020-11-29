@@ -4,12 +4,17 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
+
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --fix --ext .js",
+
     "dev": "export NODE_ENV=dev && npx nodemon server.js",
     "dev:win": "set NODE_ENV=dev && npx nodemon server.js",
-    "test": "export NODE_ENV=test && mocha --timeout 10000 --exit",
-    "test:win": "set NODE_ENV=test && mocha --timeout 10000 --exit"
+
+    "test": "export NODE_ENV=test && nyc --reporter=text-summary mocha --timeout 10000 --exit",
+    "test:win": "set NODE_ENV=test && nyc --reporter=text-summary mocha --timeout 10000 --exit",
+    "test:enforce": "export NODE_ENV=test && nyc --check-coverage --reporter=text mocha --timeout 10000 --exit",
+    "test:enforce:win": "set NODE_ENV=test && nyc --check-coverage --reporter=text mocha --timeout 10000 --exit"
   },
   "keywords": [],
   "author": "Jack Zhang",
@@ -34,6 +39,7 @@
     "mocha": "^8.2.1",
     "mocha-suppress-logs": "^0.2.0",
     "nodemon": "^2.0.2",
+    "nyc": "^15.1.0",
     "prettier": "^2.1.2"
   }
 }
