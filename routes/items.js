@@ -9,12 +9,6 @@ let GridFsStorage = require('multer-gridfs-storage');
 let Item = require('../models/item.model');
 let Event = require('../models/event.model');
 
-// There exists a separate database for testing
-let uri = process.env.ATLAS_URI;
-if (process.env.NODE_ENV === 'test') {
-	uri = process.env.ATLAS_URI_TEST;
-}
-
 const connection = mongoose.connection;
 
 let gfs;
