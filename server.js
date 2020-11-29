@@ -45,6 +45,7 @@ const usersRouter = require('./routes/users');
 const botsRouter = require('./routes/bots');
 const itemsRouter = require('./routes/items');
 const eventsRouter = require('./routes/events');
+const mapRouter = require('./routes/map');
 
 app.get('/', (req, res) => {
 	res.json('Welcome to BruinBot API!');
@@ -53,5 +54,6 @@ app.use('/users', usersRouter);
 app.use('/bots', botsRouter);
 app.use('/items', itemsRouter);
 app.use('/events', eventsRouter);
+app.use('/map', mapRouter);
 
 module.exports = app;
