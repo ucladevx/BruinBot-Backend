@@ -10,7 +10,6 @@ npm ci
 
 Create .env file in root directory with the following enviornment variables:
 ```
-ATLAS_URI=<Your Atlas URI>
 ATLAS_URI_TEST=<Your Atlas test URI>
 ```
 

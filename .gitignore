@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# macos directory metadata
+*.DS_Store
+
 # dependencies
 node_modules
 
@@ -9,5 +12,13 @@ node_modules
 # emacs
 *~
 
-# mac OS
-*.DS_Store
+# python cache
+__pycache__/
+
+# python environments
+env/
+venv/
+ENV/
+
+# bot simulator local id
+.botid
