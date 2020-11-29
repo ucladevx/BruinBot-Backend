@@ -9,6 +9,7 @@
 		"plugin:prettier/recommended",
 		"plugin:jsdoc/recommended"
 	],
+	"ignorePatterns": ["simulator/*"],
 	"rules": {
 		"no-unused-vars": [
 			"error",
