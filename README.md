@@ -1,5 +1,5 @@
 # BruinBot-Backend
-Our backend stack consists of Express + Mongoose. Refer to our [notion page](https://www.notion.so/uclabruinbot/Backend-dcd2a56527e34f87a697e8b54c52ce96) for more details. 
+Our backend stack consists of Express + Mongoose. Refer to our [notion page](https://www.notion.so/uclabruinbot/Backend-dcd2a56527e34f87a697e8b54c52ce96) for more details. Our frontend repo can be found [here](https://github.com/ucladevx/BruinBot-Frontend).
 
 ### Set up instructions:
 
@@ -23,4 +23,9 @@ Make sure your code passes the style linter! Check for mistakes and fix some of 
 ```
 npm run lint
 npm run lint:fix
+```
+
+Run Mocha tests
+```
+npm test
 ```

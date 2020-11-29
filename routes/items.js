@@ -124,7 +124,7 @@ router.post('/add', upload.single('img'), (req, res) => {
 /**
  * Update weight of item specified by item id
  */
-router.route('/weight').put((req, res) => {
+router.route('/weight').put(async (req, res) => {
 	const { itemId, weight } = req.body;
 
 	if (!itemId || !weight) {
@@ -133,10 +133,13 @@ router.route('/weight').put((req, res) => {
 			.json("Required itemId and/or weight not provided in request's body.");
 	}
 
-	Item.findByIdAndUpdate(itemId, { weight: weight }, function (err) {
-		if (err) res.status(400).json(err);
-		else res.json('Weight successfully updated for Item ' + itemId + '.');
-	});
+	try {
+		await Item.findByIdAndUpdate(itemId, { weight: weight });
+		res.json('Weight successfully updated for Item ' + itemId + '.');
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
