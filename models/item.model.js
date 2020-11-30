@@ -14,7 +14,11 @@ const itemSchema = new schema(
 			type: Number,
 			required: true,
 		},
-		img: {
+		imgSrc: {
+			type: String,
+			required: true,
+		},
+		imgKey: {
 			type: String,
 			required: true,
 		},
