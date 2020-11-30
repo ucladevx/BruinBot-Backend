@@ -1,0 +1,30 @@
+name: Deploy to Amazon Elastic Beanstalk
+on:
+  push:
+    branches:
+    - main
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Checkout source code
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+        
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v14
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ucla-bruinbot
+          environment_name: ucla-bruinbot-prod
+          version_label: $RELEASE_VERSION
+          region: us-west-1
+          deployment_package: deploy.zip
