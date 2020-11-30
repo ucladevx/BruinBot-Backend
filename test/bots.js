@@ -2,11 +2,12 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const assert = require('assert');
-const app = require('../server');
+let app = require('../app.js');
 
-let { BruinBot } = require('../models/bruinbot.model');
-let { Location } = require('../models/map.model');
+let { BruinBot } = require('../models/bruinbot.model.js');
+let { createAndSaveBot } = require('./utils.js');
 
+const testPort = 8888;
 chai.use(chaiHttp);
 
 const exampleBotA = {
@@ -21,8 +22,14 @@ const exampleBotB = {
 	name: 'Polar Bear',
 };
 
+// Doesn't exist statement until server is set up
 before((done) => {
-	app.on('Ready', () => done());
+	app.on('Mongoose ready', () => {
+		app = app.listen(testPort, () => {
+			console.log(`This server is running on port ${testPort}!\n`);
+			done();
+		});
+	});
 });
 
 describe('BruinBot', () => {
@@ -76,27 +83,6 @@ describe('BruinBot', () => {
 	});
 });
 
-/**
- * Creates bot in memory and saves it to the test database
- *
- * @param {object} bot Bot object with latitude, longitude, and name
- *
- * @returns {object} Saved bot in database
- */
-async function createAndSaveBot(bot) {
-	let newLocation = new Location({
-		latitude: bot.latitude,
-		longitude: bot.longitude,
-	});
-
-	await newLocation.save();
-
-	let newBot = new BruinBot({
-		location: newLocation,
-		status: 'Idle',
-		name: bot.name,
-		inventory: [],
-	});
-
-	return await newBot.save();
-}
+after(() => {
+	app.close();
+});
