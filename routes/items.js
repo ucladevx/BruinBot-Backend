@@ -24,10 +24,10 @@ const Bucket = 'bruinbot-item-images';
  */
 
 /**
- * Adds an item
- * The body of POST request should be multi-part/form-data
+ * Add an item with weight 0.
  *
- * See how Amazon S3 works in Notion Wiki
+ * The body of POST request should be multi-part/form-data - see the Notion for
+ * more information about S3
  */
 router.post('/add', upload.single('img'), (req, res) => {
 	if (!req.file) {
@@ -35,9 +35,9 @@ router.post('/add', upload.single('img'), (req, res) => {
 	}
 
 	const { buffer, originalname, mimetype } = req.file;
-	const { name, price, eventId, weight } = req.body;
+	const { name, price, eventId } = req.body;
 
-	if (!name || !price || !eventId || !weight) {
+	if (!name || !price || !eventId) {
 		return res.status(404).json('Please provide name, price, and eventId.');
 	}
 
@@ -60,7 +60,7 @@ router.post('/add', upload.single('img'), (req, res) => {
 				price,
 				imgSrc: data.Location,
 				imgKey: data.Key,
-				weight,
+				weight: 0.0,
 			});
 
 			await Event.findByIdAndUpdate(eventId, { $push: { items: newItem } });
@@ -69,6 +69,31 @@ router.post('/add', upload.single('img'), (req, res) => {
 		});
 	} catch (err) {
 		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * ------------------------- PUT (update existing objects) ------------------------
+ */
+
+/**
+ * Update weight of item specified by item id
+ */
+router.route('/weight').put(async (req, res) => {
+	const { itemId, weight } = req.body;
+
+	if (!itemId || !weight) {
+		res
+			.status(400)
+			.json("Required itemId and/or weight not provided in request's body.");
+	}
+
+	try {
+		await Item.findByIdAndUpdate(itemId, { weight: weight });
+		res.json('Weight successfully updated for Item ' + itemId + '.');
+	} catch (err) {
+		console.log('Error ' + err);
 		res.status(400).json(err);
 	}
 });
