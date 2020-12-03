@@ -26,7 +26,6 @@ router.route('/add').post((req, res) => {
 });
 
 router.route('/').delete((req, res) => {
-	//deletes by id
 	User.findOneAndDelete({ firebase_id: req.body.firebase_id })
 		.then(() => res.json('User ' + req.body.firebase_id + ' was deleted!'))
 		.catch((err) => res.status(400).json(err));
