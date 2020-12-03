@@ -25,6 +25,21 @@ botsRouter.route('/').get((req, res) => {
 });
 
 /**
+ * Return a specific BruinBot by id
+ */
+botsRouter.route('/bot').get(async (req, res) => {
+	const botId = req.body.botId;
+	if (!botId) res.status(400).json('botId not provided in request');
+
+	try {
+		let data = await BruinBot.findById(botId);
+		res.json(data);
+	} catch (err) {
+		res.status(404).json(err);
+	}
+});
+
+/**
  * Search through all BruinBot objects and return the closest BruinBot object
  * to the coordinates in the request's body.
  */
