@@ -68,7 +68,6 @@
     "EC2",
     "FARGATE"
   ],
-  "taskDefinitionArn": "arn:aws:ecs:us-west-1:474608071686:task-definition/node-server-task:3",
   "family": "node-server-task",
   "requiresAttributes": [
     {
