@@ -14,7 +14,13 @@ const itemSchema = new schema(
 			type: Number,
 			required: true,
 		},
-		img: {
+		// URL to access the image
+		imgSrc: {
+			type: String,
+			required: true,
+		},
+		// Key to identify an image for modification/deletion on S3
+		imgKey: {
 			type: String,
 			required: true,
 		},

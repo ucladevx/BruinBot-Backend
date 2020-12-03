@@ -1,80 +1,23 @@
 const express = require('express');
+const AWS = require('aws-sdk');
 
 const router = express.Router();
 
-let mongoose = require('mongoose');
 let multer = require('multer');
-let GridFsStorage = require('multer-gridfs-storage');
 
 let Item = require('../models/item.model');
 let Event = require('../models/event.model');
 
-// There exists a separate database for testing
-let uri = process.env.ATLAS_URI;
-if (process.env.NODE_ENV === 'test') {
-	uri = process.env.ATLAS_URI_TEST;
-}
-
-const connection = mongoose.connection;
-
-let gfs;
-connection.once('open', () => {
-	gfs = new mongoose.mongo.GridFSBucket(connection.db, {
-		bucketName: 'itemimages',
-	});
-});
-
-const storage = new GridFsStorage({
-	url: uri,
-	file: (req, file) => {
-		return new Promise((resolve, reject) => {
-			if (!file || !file.originalname) {
-				reject({ err: 'No file found...' });
-			}
-			const filename = file.originalname;
-			const fileInfo = {
-				filename: filename,
-				bucketName: 'itemimages',
-			};
-			resolve(fileInfo);
-		});
-	},
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
-/**
- * ----------------- GET (return information about objects) ----------------
- */
-
-/**
- * Get a list of all items
- */
-router.get('/', (req, res) => {
-	Item.find()
-		.then((items) => res.json(items))
-		.catch((err) => res.status(400).json(err));
+const s3 = new AWS.S3({
+	accessKeyId: process.env.S3_ACCESS_KEY_ID,
+	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
 });
 
-/**
- * Get image of item by the image's filename
- */
-router.get('/img', (req, res) => {
-	const { img } = req.query;
-	if (!img) {
-		return res.status(404).json('Please provide an image filename.');
-	}
-	const downloadStream = gfs.openDownloadStreamByName(img);
-	downloadStream.on('data', (chunk) => {
-		res.write(chunk);
-	});
-	downloadStream.on('error', () => {
-		res.status(404).json('Something went wrong when retrieving the image...');
-	});
-	downloadStream.on('end', () => {
-		res.end();
-	});
-});
+const Bucket = 'bruinbot-item-images';
 
 /**
  * ------------------------- POST (add new objects) -------------------------
@@ -82,39 +25,52 @@ router.get('/img', (req, res) => {
 
 /**
  * Adds an item
- * The POST request should be multi-part/form-data
+ * The body of POST request should be multi-part/form-data
  *
- * See how GridFS works in Notion Wiki
+ * See how Amazon S3 works in Notion Wiki
  */
 router.post('/add', upload.single('img'), (req, res) => {
 	if (!req.file) {
 		return res.status(404).json('Please provide an image.');
 	}
 
-	const { name, price, eventId } = req.body;
+	const { buffer, originalname, mimetype } = req.file;
+	const { name, price, eventId, weight } = req.body;
 
-	if (!name || !price || !eventId) {
-		removeOneImage(req.file.originalname);
+	if (!name || !price || !eventId || !weight) {
 		return res.status(404).json('Please provide name, price, and eventId.');
 	}
 
-	const newItem = new Item({
-		name: name,
-		price: price,
-		img: req.file.originalname,
-		weight: 0.0,
-	});
+	const params = {
+		Bucket,
+		Key: originalname,
+		Body: buffer,
+		ContentType: mimetype,
+		ACL: 'public-read',
+	};
 
-	Event.findByIdAndUpdate(eventId, { $push: { items: newItem } })
-		.then(() => newItem.save())
-		.then((item) => {
-			console.log(`Successfully added item: ${item}`);
-			res.json(item);
-		})
-		.catch((err) => {
-			console.log('Error: ' + err);
-			res.status(400).json(err);
+	try {
+		s3.upload(params, async (err, data) => {
+			if (err) {
+				throw err;
+			}
+
+			const newItem = new Item({
+				name,
+				price,
+				imgSrc: data.Location,
+				imgKey: data.Key,
+				weight,
+			});
+
+			await Event.findByIdAndUpdate(eventId, { $push: { items: newItem } });
+			const savedItem = await newItem.save();
+			res.json(savedItem);
 		});
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
@@ -148,48 +104,36 @@ router.route('/weight').put(async (req, res) => {
 
 /**
  * Delete item specified by item id
+ *
+ * @param {string} itemId Object ID of the item to be deleted.
+ * @param {string} eventId Object ID of the event to be modified.
  */
-router.delete('/', (req, res) => {
-	const itemId = req.body.id;
+router.delete('/', async (req, res) => {
+	const { itemId, eventId } = req.query;
 
-	if (!itemId) {
+	if (!itemId || !eventId) {
 		res.status(400).json('Required itemId not provided in requets body.');
 	}
 
-	Item.findById(itemId)
-		.then(async (item) => {
-			const { img, _id } = item;
-			await Item.findByIdAndDelete(_id);
-			await removeOneImage(img);
+	try {
+		const deletedItem = await Item.findByIdAndDelete(itemId);
+		await Event.findByIdAndUpdate(eventId, { $pull: { items: itemId } });
 
-			console.log(`Successfully deleted item: ${item}`);
-			res.json(`Sucessfully removed item ${itemId}`);
-		})
-		.catch((err) => {
-			console.log('Error: ' + err);
-			res.status(400).json(err);
+		const params = {
+			Bucket,
+			Key: deletedItem.imgKey,
+		};
+		s3.deleteObject(params, (err, data) => {
+			if (err) {
+				throw err;
+			}
+
+			res.json({ deletedItem, deletedImage: data });
 		});
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 module.exports = router;
-
-/**
- * ---------------------------- Helper functions ----------------------------
- */
-
-/**
- * Remove an image with name filename from database
- *
- * @param {string} fileName Name of the image file to be deleted
- */
-async function removeOneImage(fileName) {
-	const imgs = await gfs.find({ fileName }).toArray();
-	if (!imgs || !imgs.length) {
-		console.log(
-			`Error: Could not delete image file with with name ${fileName}.`
-		);
-	} else {
-		console.log(`Successfully deleted image file ${fileName}.`);
-		gfs.delete(imgs[0]._id);
-	}
-}
