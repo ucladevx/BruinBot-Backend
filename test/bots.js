@@ -1,4 +1,4 @@
-/*const chai = require('chai');
+const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const assert = require('assert');
@@ -175,4 +175,3 @@ describe('Bot', () => {
 after(() => {
 	app.close();
 });
-*/
