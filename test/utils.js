@@ -1,5 +1,4 @@
 let { BruinBot } = require('../models/bruinbot.model');
-let { Location } = require('../models/map.model');
 let { Event } = require('../models/event.model');
 
 /**
@@ -10,15 +9,11 @@ let { Event } = require('../models/event.model');
  * @returns {object} Saved bot in database
  */
 async function createAndSaveBot(bot) {
-	let newLocation = new Location({
-		latitude: bot.latitude,
-		longitude: bot.longitude,
-	});
-
-	await newLocation.save();
-
 	let newBot = new BruinBot({
-		location: newLocation,
+		location: {
+			latitude: bot.latitude,
+			longitude: bot.longitude,
+		},
 		status: 'Idle',
 		name: bot.name,
 		inventory: [],
