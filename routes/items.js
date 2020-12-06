@@ -1,23 +1,13 @@
 const express = require('express');
-const AWS = require('aws-sdk');
-
-const router = express.Router();
-
 let multer = require('multer');
 
 let { Item } = require('../models/item.model');
 let { Event } = require('../models/event.model');
+let { uploadImageToS3, deleteImageFromS3 } = require('./utils.js');
 
+const router = express.Router();
 const storage = multer.memoryStorage();
-
 const upload = multer({ storage });
-
-const s3 = new AWS.S3({
-	accessKeyId: process.env.S3_ACCESS_KEY_ID,
-	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
-});
-
-const Bucket = 'bruinbot-item-images';
 
 /**
  * ------------------------- POST (add new objects) -------------------------
@@ -34,45 +24,31 @@ router.post('/add', upload.single('img'), async (req, res) => {
 		return res.status(404).json('Please provide an image.');
 	}
 
-	const { buffer, originalname, mimetype } = req.file;
 	const { name, price, eventId } = req.body;
 
 	if (!name || !price || !eventId)
 		return res.status(404).json('Please provide name, price, and eventId.');
 
-	let event;
 	try {
-		event = await Event.findById(eventId);
+		let event = await Event.findById(eventId);
 
 		if (!event)
 			return res.status(404).json('Could not find event specified by eventId.');
 
-		const params = {
-			Bucket,
-			Key: originalname,
-			Body: buffer,
-			ContentType: mimetype,
-			ACL: 'public-read',
-		};
+		let data = await uploadImageToS3(req.file);
 
-		s3.upload(params, async (err, data) => {
-			if (err) {
-				throw err;
-			}
-
-			const newItem = new Item({
-				name,
-				price,
-				imgSrc: data.Location,
-				imgKey: data.Key,
-				weight: 0.0,
-			});
-
-			event.items.push(newItem);
-			await event.save();
-			const savedItem = await newItem.save();
-			res.json(savedItem);
+		const newItem = new Item({
+			name,
+			price,
+			imgSrc: data.Location,
+			imgKey: data.Key,
+			weight: 0.0,
 		});
+
+		event.items.push(newItem);
+		await event.save();
+		const savedItem = await newItem.save();
+		res.json(savedItem);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
@@ -132,17 +108,8 @@ router.delete('/', async (req, res) => {
 		event.items.pull(itemId);
 		await event.save();
 
-		const params = {
-			Bucket,
-			Key: item.imgKey,
-		};
-		s3.deleteObject(params, (err, data) => {
-			if (err) {
-				throw err;
-			}
-
-			res.json({ item, deletedImage: data });
-		});
+		let data = await deleteImageFromS3(item.imgKey);
+		res.json({ item, deletedImage: data });
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);

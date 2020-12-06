@@ -8,6 +8,7 @@ const fs = require('fs');
 let { Item } = require('../models/item.model.js');
 let { Event } = require('../models/event.model.js');
 let { createAndSaveEvent } = require('./utils.js');
+let { deleteImageFromS3 } = require('../routes/utils.js');
 
 const testPort = 8888;
 chai.use(chaiHttp);
@@ -65,8 +66,8 @@ describe('Item', () => {
 				.field('eventId', event._id.toString())
 				.attach(
 					'img',
-					fs.readFileSync(`${__dirname}/assets/boba.jpg`),
-					'boba.jpg'
+					fs.readFileSync(`${__dirname}/assets/sample-image.jpg`),
+					'sample-image.jpg'
 				);
 			console.log(res);
 			/*assert.strictEqual(res.status, 200);
@@ -87,14 +88,15 @@ describe('Item', () => {
 				.field('eventId', event._id.toString())
 				.attach(
 					'img',
-					fs.readFileSync(`${__dirname}/assets/boba.jpg`),
-					'boba.jpg'
+					fs.readFileSync(`${__dirname}/assets/sample-image.jpg`),
+					'sample-image.jpg'
 				)
 				.then(async (res) => {
-					console.log(res);
 					assert.strictEqual(res.status, 200);
 					let items = await Item.find();
 					assert.strictEqual(items.length, 1);
+
+					await deleteImageFromS3(res.body.imgKey);
 				});
 		});
 	});
@@ -117,6 +119,11 @@ describe('Item', () => {
 	});*/
 });
 
+after(() => {
+	app.close();
+});
+
+// TODO: make sure to move this to utils.js
 /**
  * Creates item in memory and saves it to the test database
  *
