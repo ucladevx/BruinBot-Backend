@@ -109,13 +109,11 @@ botsRouter.route('/').post((req, res) => {
 			.json('Required name / lat / lon data not in request body.');
 	}
 
-	const newLocation = new Map.Location({
-		latitude: lat,
-		longitude: lon,
-	});
-
 	const newBot = new BruinBot({
-		location: newLocation,
+		location: {
+			latitude: lat,
+			longitude: lon,
+		},
 		status: 'Idle',
 		name: name,
 		inventory: [],
