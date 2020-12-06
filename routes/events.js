@@ -2,10 +2,10 @@ const express = require('express');
 
 const eventsRouter = express.Router();
 
-let Event = require('../models/event.model');
+let { Event } = require('../models/event.model');
 let { BruinBot } = require('../models/bruinbot.model');
-let Admins = require('../models/user.model');
-let Items = require('../models/item.model');
+let { User } = require('../models/user.model');
+let { Item } = require('../models/item.model');
 
 /**
  * ----------------- GET (return information about objects) ----------------
@@ -32,7 +32,8 @@ eventsRouter.route('/items').get((req, res) => {
 
 	Event.findById(eventId)
 		.then(async (event) => {
-			let items = await Items.find().where('_id').in(event.items).exec();
+			console.log(event);
+			let items = await Item.find().where('_id').in(event.items).exec();
 			res.json(items);
 		})
 		.catch((err) => res.status(400).json(err));
@@ -75,7 +76,7 @@ eventsRouter.route('/admins').get((req, res) => {
 
 	Event.findById(eventId)
 		.then(async (event) => {
-			let admins = await Admins.find().where('_id').in(event.admins).exec();
+			let admins = await User.find().where('_id').in(event.admins).exec();
 			res.json(admins);
 		})
 		.catch((err) => res.status(400).json(err));
@@ -202,7 +203,7 @@ eventsRouter.route('/').delete((req, res) => {
 	Event.findByIdAndDelete(eventId)
 		.then((event) => {
 			console.log(`Successfully deleted event: ${event}`);
-			return Items.deleteMany({ _id: { $in: event.items } });
+			return Item.deleteMany({ _id: { $in: event.items } });
 		})
 		.then((result) => {
 			console.log(`Successfully deleted event's items: ${result}`);

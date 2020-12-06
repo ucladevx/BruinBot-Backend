@@ -5,8 +5,8 @@ const router = express.Router();
 
 let multer = require('multer');
 
-let Item = require('../models/item.model');
-let Event = require('../models/event.model');
+let { Item } = require('../models/item.model');
+let { Event } = require('../models/event.model');
 
 const storage = multer.memoryStorage();
 
@@ -29,7 +29,7 @@ const Bucket = 'bruinbot-item-images';
  * The body of POST request should be multi-part/form-data - see the Notion for
  * more information about S3
  */
-router.post('/add', upload.single('img'), (req, res) => {
+router.post('/add', upload.single('img'), async (req, res) => {
 	if (!req.file) {
 		return res.status(404).json('Please provide an image.');
 	}
@@ -37,19 +37,24 @@ router.post('/add', upload.single('img'), (req, res) => {
 	const { buffer, originalname, mimetype } = req.file;
 	const { name, price, eventId } = req.body;
 
-	if (!name || !price || !eventId) {
+	if (!name || !price || !eventId)
 		return res.status(404).json('Please provide name, price, and eventId.');
-	}
 
-	const params = {
-		Bucket,
-		Key: originalname,
-		Body: buffer,
-		ContentType: mimetype,
-		ACL: 'public-read',
-	};
-
+	let event;
 	try {
+		event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		const params = {
+			Bucket,
+			Key: originalname,
+			Body: buffer,
+			ContentType: mimetype,
+			ACL: 'public-read',
+		};
+
 		s3.upload(params, async (err, data) => {
 			if (err) {
 				throw err;
@@ -63,7 +68,8 @@ router.post('/add', upload.single('img'), (req, res) => {
 				weight: 0.0,
 			});
 
-			await Event.findByIdAndUpdate(eventId, { $push: { items: newItem } });
+			event.items.push(newItem);
+			await event.save();
 			const savedItem = await newItem.save();
 			res.json(savedItem);
 		});
@@ -83,11 +89,10 @@ router.post('/add', upload.single('img'), (req, res) => {
 router.route('/weight').put(async (req, res) => {
 	const { itemId, weight } = req.body;
 
-	if (!itemId || !weight) {
+	if (!itemId || !weight)
 		res
 			.status(400)
 			.json("Required itemId and/or weight not provided in request's body.");
-	}
 
 	try {
 		await Item.findByIdAndUpdate(itemId, { weight: weight });
@@ -111,24 +116,32 @@ router.route('/weight').put(async (req, res) => {
 router.delete('/', async (req, res) => {
 	const { itemId, eventId } = req.query;
 
-	if (!itemId || !eventId) {
-		res.status(400).json('Required itemId not provided in requets body.');
-	}
+	if (!itemId || !eventId)
+		res.status(400).json('Required itemId not provided in requet body.');
 
 	try {
-		const deletedItem = await Item.findByIdAndDelete(itemId);
-		await Event.findByIdAndUpdate(eventId, { $pull: { items: itemId } });
+		let event = await Event.findById(eventId);
+		let item = await Item.findById(itemId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+		if (!item)
+			return res.status(404).json('Could not find item specified by itemId.');
+
+		item.deleteOne();
+		event.items.pull(itemId);
+		await event.save();
 
 		const params = {
 			Bucket,
-			Key: deletedItem.imgKey,
+			Key: item.imgKey,
 		};
 		s3.deleteObject(params, (err, data) => {
 			if (err) {
 				throw err;
 			}
 
-			res.json({ deletedItem, deletedImage: data });
+			res.json({ item, deletedImage: data });
 		});
 	} catch (err) {
 		console.log('Error: ' + err);
