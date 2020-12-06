@@ -24,13 +24,13 @@ eventsRouter.route('/').get((req, res) => {
  * Gets the list of items for an event by id
  */
 eventsRouter.route('/items').get((req, res) => {
-	const id = req.body.id;
+	const eventId = req.query.eventId;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	Event.findById(id)
+	Event.findById(eventId)
 		.then(async (event) => {
 			let items = await Items.find().where('_id').in(event.items).exec();
 			res.json(items);
@@ -42,7 +42,7 @@ eventsRouter.route('/items').get((req, res) => {
  * Gets the enriched list of bots (actual items, not just item_ids) for an event by id
  */
 eventsRouter.route('/bots').get((req, res) => {
-	const eventId = req.body.id;
+	const eventId = req.query.eventId;
 
 	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
@@ -67,13 +67,13 @@ eventsRouter.route('/bots').get((req, res) => {
  * Gets the list of admins for an event by id
  */
 eventsRouter.route('/admins').get((req, res) => {
-	const id = req.body.id;
+	const eventId = req.query.eventId;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	Event.findById(id)
+	Event.findById(eventId)
 		.then(async (event) => {
 			let admins = await Admins.find().where('_id').in(event.admins).exec();
 			res.json(admins);

@@ -25,12 +25,27 @@ botsRouter.route('/').get((req, res) => {
 });
 
 /**
+ * Return a specific BruinBot by id
+ */
+botsRouter.route('/bot').get(async (req, res) => {
+	const botId = req.query.botId;
+	if (!botId) res.status(400).json(`'botId' not provided in request params`);
+
+	try {
+		let data = await BruinBot.findById(botId);
+		res.json(data);
+	} catch (err) {
+		res.status(404).json(err);
+	}
+});
+
+/**
  * Search through all BruinBot objects and return the closest BruinBot object
  * to the coordinates in the request's body.
  */
 botsRouter.route('/closest').get((req, res) => {
-	const lat = req.body.latitude;
-	const lon = req.body.longitude;
+	const lat = req.query.latitude;
+	const lon = req.query.longitude;
 
 	if (!lat || !lon) {
 		return res
@@ -59,13 +74,13 @@ botsRouter.route('/closest').get((req, res) => {
  * Returns Location of the BruinBot with the provided id.
  */
 botsRouter.route('/location').get((req, res) => {
-	const id = req.body.id;
+	const botId = req.query.botId;
 
-	if (!id) {
-		return res.status(400).json('Required id data not in request body.');
+	if (!botId) {
+		return res.status(400).json('Required botId not in request query.');
 	}
 
-	BruinBot.findById(id, function (err, bot) {
+	BruinBot.findById(botId, function (err, bot) {
 		if (err) {
 			console.log('Error: ' + err);
 			res.status(400).json(err);
@@ -217,7 +232,7 @@ botsRouter.route('/').delete((req, res) => {
 	BruinBot.findByIdAndDelete(id, (err, bot) => {
 		if (err) {
 			console.log('Error: ' + err);
-			res.status(400).json(err);
+			res.status(404).json(err);
 		} else {
 			console.log(`Successfully deleted bot: ${bot}`);
 			res.json(`Deleted bot ${id}`);
@@ -250,7 +265,7 @@ function findBotCoords(bots, lat, lon) {
 	let smallestDistance = Infinity;
 	let currentDistance = undefined;
 
-	// For all bots that are, first find their distance from the provided coordinates
+	// For all bots, first find their distance from the provided coordinates
 	for (var b of bots) {
 		currentDistance = util.coordDistanceM(
 			lat,
