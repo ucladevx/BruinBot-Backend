@@ -2,7 +2,7 @@ const express = require('express');
 
 const mapRouter = express.Router();
 
-const { Location, MapNode, Path } = require('../models/map.model');
+const { MapNode, Path } = require('../models/map.model');
 
 /**
  * Get all map nodes.
@@ -41,7 +41,6 @@ mapRouter.route('/').post(async (req, res) => {
 			return res.status(400).json({ error: 'Malformatted path coordinates.' });
 		}
 
-		const location = new Location({ latitude: lat, longitude: lon });
 		if (i === 0 || i === path.length - 1) {
 			// If a map node already exists for a location,
 			// use it instead of creating a new one.
@@ -49,9 +48,11 @@ mapRouter.route('/').post(async (req, res) => {
 				'location.latitude': lat,
 				'location.longitude': lon,
 			});
-			endPoints.push(existingNode || new MapNode({ location }));
+			endPoints.push(
+				existingNode || new MapNode({ latitude: lat, longitude: lon })
+			);
 		} else {
-			points.push(location);
+			points.push({ latitude: lat, longitude: lon });
 		}
 	}
 
