@@ -3,7 +3,6 @@ const express = require('express');
 const botsRouter = express.Router();
 
 let { BruinBot, InventoryArticle } = require('../models/bruinbot.model');
-let Map = require('../models/map.model');
 let util = require('./utils');
 
 /**

@@ -1,5 +1,4 @@
 let { BruinBot } = require('../models/bruinbot.model');
-let { Location } = require('../models/map.model');
 
 /**
  * Creates bot in memory and saves it to the test database

@@ -2,7 +2,7 @@ const express = require('express');
 
 const mapRouter = express.Router();
 
-const { Location, MapNode, Path } = require('../models/map.model');
+const { MapNode, Path } = require('../models/map.model');
 
 /**
  * Get all map nodes.
