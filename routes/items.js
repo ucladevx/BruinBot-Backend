@@ -17,7 +17,7 @@ const s3 = new AWS.S3({
 	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
 });
 
-const Bucket = 'bruinbot-item-images';
+const Bucket = `${process.env.BUCKET}/item-images`;
 
 /**
  * ------------------------- POST (add new objects) -------------------------
