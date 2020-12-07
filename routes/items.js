@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 let multer = require('multer');
 
 let { Item } = require('../models/item.model');
@@ -72,9 +71,6 @@ router.route('/weight').put(async (req, res) => {
 			.json("Required itemId and/or weight not provided in request's body.");
 
 	try {
-		if (!mongoose.Types.ObjectId.isValid(itemId))
-			return res.status(404).json('Could not find item specified by itemId.');
-
 		let item = await Item.findById(itemId);
 
 		if (!item)
@@ -106,11 +102,6 @@ router.delete('/', async (req, res) => {
 		res.status(400).json('Required itemId not provided in requet body.');
 
 	try {
-		if (!mongoose.Types.ObjectId.isValid(itemId))
-			return res.status(404).json('Could not find item specified by itemId.');
-		if (!mongoose.Types.ObjectId.isValid(eventId))
-			return res.status(404).json('Could not find item specified by eventId.');
-
 		let event = await Event.findById(eventId);
 		let item = await Item.findById(itemId);
 
