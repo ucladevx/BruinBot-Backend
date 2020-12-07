@@ -1,0 +1,24 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# macos directory metadata
+*.DS_Store
+
+# dependencies
+node_modules
+
+# dotenv
+.env
+
+# emacs
+*~
+
+# python cache
+__pycache__/
+
+# python environments
+env/
+venv/
+ENV/
+
+# istanbul
+.nyc_output/

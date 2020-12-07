@@ -145,7 +145,7 @@ describe('Item', () => {
 					weight: 12.7,
 				})
 				.then(async (res) => {
-					assert.notStrictEqual(res.status, 200);
+					assert.strictEqual(res.status, 404);
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
@@ -197,7 +197,7 @@ describe('Item', () => {
 					eventId: event._id.toString(),
 				})
 				.then(async (res) => {
-					assert.notStrictEqual(res.status, 200);
+					assert.strictEqual(res.status, 404);
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
@@ -214,13 +214,15 @@ describe('Item', () => {
 					eventId: 'clearlyWrongId',
 				})
 				.then(async (res) => {
-					assert.notStrictEqual(res.status, 200);
+					assert.strictEqual(res.status, 404);
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
 	});
 });
 
-after(() => {
+after(async () => {
+	await Item.deleteMany({});
+	await Event.deleteMany({});
 	app.close();
 });

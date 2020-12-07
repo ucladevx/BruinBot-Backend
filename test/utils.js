@@ -48,7 +48,7 @@ async function createAndSaveEvent(event) {
  * Creates item in memory and saves it to the test database
  *
  * @param {object} item Item object with name, price, image, and event_id
- * @param eventId the id of the event the item is being added to
+ * @param {string} eventId the id of the event the item is being added to
  * @returns {object} Saved item in database
  */
 async function createAndSaveItem(item, eventId) {
