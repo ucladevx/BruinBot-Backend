@@ -3,6 +3,7 @@ const express = require('express');
 const botsRouter = express.Router();
 
 let { BruinBot, InventoryArticle } = require('../models/bruinbot.model');
+let { Path } = require('../models/map.model');
 let util = require('./utils');
 
 /**
@@ -210,6 +211,66 @@ botsRouter.route('/updateLocation').put((req, res) => {
 			}
 		}
 	);
+});
+
+/**
+ * Update BruinBot object with specified id to have new path from path object id.
+ *
+ * @param {string} botId id of the bot to be updated.
+ * @param {string} pathId id of the path to be added.
+ */
+botsRouter.put('/updatePath', async (req, res) => {
+	const botId = req.body.id;
+	const pathId = req.body.path;
+
+	if (!botId || !pathId)
+		res.status(400).json('Required bot id / path id data not in request body.');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+		let pathCount = await Path.count(pathId);
+
+		if (!bot)
+			return res.status(404).json('Bot with specified id does not exist.');
+		if (pathCount < 1)
+			return res.status(404).json('Path with specified id does not exist.');
+
+		bot.path = pathId;
+		await bot.save();
+		res.json(`Successfully added path with id ${pathId} to bot ${botId}.`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Update BruinBot object with specified id to have a null path.
+ *
+ * @param {string} botId id of the bot to be updated.
+ */
+botsRouter.put('/removePath', async (req, res) => {
+	const botId = req.body.id;
+
+	if (!botId) res.status(400).json('Required bot id data not in request body.');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Bot with specified id does not exist.');
+		if (bot.path == null)
+			return res
+				.status(409)
+				.json('Bot with specified id already has null path.');
+
+		bot.path = null;
+		await bot.save();
+		res.json(`Successfully removed path from bot ${botId}.`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**

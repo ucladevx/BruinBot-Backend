@@ -27,6 +27,12 @@ const bruinBotSchema = new schema({
 		enum: ['Idle', 'InTransit'],
 		default: 'Idle',
 	},
+	path: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: true,
+		ref: 'Path',
+		default: null,
+	},
 	name: {
 		type: String,
 		required: true,
@@ -42,5 +48,4 @@ const bruinBotSchema = new schema({
 const BruinBot = mongoose.model('BruinBot', bruinBotSchema);
 const InventoryArticle = mongoose.model('InventoryArticle', inventoryArticle);
 
-module.exports.BruinBot = BruinBot;
-module.exports.InventoryArticle = InventoryArticle;
+module.exports = { BruinBot, InventoryArticle };
