@@ -21,15 +21,17 @@ const exampleItemA = {
 
 const exampleEvent = {
 	name: 'Bear Gathering',
-	bot_ids: ['5fc8e9d411fb0d00125750d3', '5fc90026d5869f00143e7fa6'],
-	admin_ids: ['5fc9014bd5869f00143e7fab'],
 };
 
 // Doesn't exist statement until server is set up
 before((done) => {
 	app.on('Mongoose ready', () => {
-		app = app.listen(testPort, () => {
+		app = app.listen(testPort, async () => {
 			console.log(`This server is running on port ${testPort}!\n`);
+
+			// Start from fresh db collections
+			await Item.deleteMany({});
+			await Event.deleteMany({});
 			done();
 		});
 	});
@@ -38,8 +40,8 @@ before((done) => {
 describe('Item', () => {
 	suppressLogs();
 
-	// Start from fresh collection for each test
-	beforeEach(async () => {
+	// Clean up after each test
+	afterEach(async () => {
 		await Item.deleteMany({});
 		await Event.deleteMany({});
 	});
@@ -64,38 +66,10 @@ describe('Item', () => {
 					assert.strictEqual(res.status, 200);
 					let items = await Item.find();
 					assert.strictEqual(items.length, 1);
+					let updatedEvent = await Event.findById(event._id);
+					assert.strictEqual(updatedEvent.items.length, 1);
 
 					await deleteImageFromS3(res.body.imgKey);
-				});
-		});
-
-		it('Should reject creation of an Item without image file', async () => {
-			let event = await createAndSaveEvent(exampleEvent);
-
-			return await chai
-				.request(app)
-				.post('/items/add')
-				.set('content-type', 'multipart/form-data')
-				.field('name', 'Boba')
-				.field('price', 4.99)
-				.field('eventId', event._id.toString())
-				.then(async (res) => {
-					assert.notStrictEqual(res.status, 200);
-				});
-		});
-
-		it('Should reject creation of an Item without name, price, or eventId', async () => {
-			return await chai
-				.request(app)
-				.post('/items/add')
-				.set('content-type', 'multipart/form-data')
-				.attach(
-					'img',
-					fs.readFileSync(`${__dirname}/assets/sample-image.jpg`),
-					'sample-image.jpg'
-				)
-				.then(async (res) => {
-					assert.notStrictEqual(res.status, 200);
 				});
 		});
 	});
@@ -114,21 +88,9 @@ describe('Item', () => {
 				})
 				.then(async (res) => {
 					assert.strictEqual(res.status, 200);
-					let item = await Item.findById(savedItem._id.toString());
+					let item = await Item.findById(savedItem._id);
 					assert.strictEqual(item.weight, 12.7);
-					await deleteImageFromS3(savedItem.imgKey);
-				});
-		});
 
-		it('Should reject update weight of an item without id/weight', async () => {
-			let event = await createAndSaveEvent(exampleEvent);
-			let savedItem = await createAndSaveItem(exampleItemA, event._id);
-
-			return await chai
-				.request(app)
-				.put('/items/weight')
-				.then(async (res) => {
-					assert.strictEqual(res.status, 400);
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
@@ -146,6 +108,7 @@ describe('Item', () => {
 				})
 				.then(async (res) => {
 					assert.notStrictEqual(res.status, 200);
+
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
@@ -167,21 +130,10 @@ describe('Item', () => {
 					assert.strictEqual(res.status, 200);
 					let items = await Item.find();
 					assert.strictEqual(items.length, 0);
-					let updatedEvent = await Event.findById(event._id.toString());
+					let updatedEvent = await Event.findById(event._id);
 					assert.strictEqual(updatedEvent.items.length, 0);
-				});
-		});
 
-		it('Should reject delete an item without itemId/eventId', async () => {
-			let event = await createAndSaveEvent(exampleEvent);
-			let savedItem = await createAndSaveItem(exampleItemA, event._id);
-
-			return await chai
-				.request(app)
-				.delete('/items')
-				.then(async (res) => {
-					assert.strictEqual(res.status, 400);
-					await deleteImageFromS3(savedItem.imgKey);
+					// await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
 
@@ -198,6 +150,7 @@ describe('Item', () => {
 				})
 				.then(async (res) => {
 					assert.notStrictEqual(res.status, 200);
+
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
@@ -215,14 +168,13 @@ describe('Item', () => {
 				})
 				.then(async (res) => {
 					assert.notStrictEqual(res.status, 200);
+
 					await deleteImageFromS3(savedItem.imgKey);
 				});
 		});
 	});
 });
 
-after(async () => {
-	await Item.deleteMany({});
-	await Event.deleteMany({});
+after(() => {
 	app.close();
 });
