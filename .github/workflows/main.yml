@@ -23,7 +23,11 @@ jobs:
         run: npm run lint
       - name: Run Mocha tests
         env:
+          # Environment variables needed for testing
           NODE_ENV: test
           ATLAS_URI_TEST: ${{ secrets.ATLAS_URI_TEST }}
+          BUCKET_TEST: ${{ secrets.BUCKET_TEST }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_ACCESS_KEY_SECRET: ${{ secrets.S3_ACCESS_KEY_SECRET }}
         run: npm test
         
