@@ -25,8 +25,11 @@ const exampleBotB = {
 // Doesn't exist statement until server is set up
 before((done) => {
 	app.on('Mongoose ready', () => {
-		app = app.listen(testPort, () => {
+		app = app.listen(testPort, async () => {
 			console.log(`This server is running on port ${testPort}!\n`);
+
+			// Start from a fresh db collection
+			await BruinBot.deleteMany({});
 			done();
 		});
 	});
@@ -35,8 +38,8 @@ before((done) => {
 describe('Bot', () => {
 	suppressLogs();
 
-	// Start from fresh collection for each test
-	beforeEach(async () => {
+	// Clean up after each test
+	afterEach(async () => {
 		await BruinBot.deleteMany({});
 	});
 
@@ -172,6 +175,6 @@ describe('Bot', () => {
 	});
 });
 
-after(() => {
+after(async () => {
 	app.close();
 });

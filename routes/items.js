@@ -1,23 +1,13 @@
 const express = require('express');
-const AWS = require('aws-sdk');
-
-const router = express.Router();
-
 let multer = require('multer');
 
-let Item = require('../models/item.model');
-let Event = require('../models/event.model');
+let { Item } = require('../models/item.model');
+let { Event } = require('../models/event.model');
+let { uploadImageToS3, deleteImageFromS3 } = require('./utils.js');
 
+const router = express.Router();
 const storage = multer.memoryStorage();
-
 const upload = multer({ storage });
-
-const s3 = new AWS.S3({
-	accessKeyId: process.env.S3_ACCESS_KEY_ID,
-	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
-});
-
-const Bucket = `${process.env.BUCKET}/item-images`;
 
 /**
  * ------------------------- POST (add new objects) -------------------------
@@ -29,44 +19,36 @@ const Bucket = `${process.env.BUCKET}/item-images`;
  * The body of POST request should be multi-part/form-data - see the Notion for
  * more information about S3
  */
-router.post('/add', upload.single('img'), (req, res) => {
+router.post('/add', upload.single('img'), async (req, res) => {
 	if (!req.file) {
 		return res.status(404).json('Please provide an image.');
 	}
 
-	const { buffer, originalname, mimetype } = req.file;
 	const { name, price, eventId } = req.body;
 
-	if (!name || !price || !eventId) {
+	if (!name || !price || !eventId)
 		return res.status(404).json('Please provide name, price, and eventId.');
-	}
-
-	const params = {
-		Bucket,
-		Key: originalname,
-		Body: buffer,
-		ContentType: mimetype,
-		ACL: 'public-read',
-	};
 
 	try {
-		s3.upload(params, async (err, data) => {
-			if (err) {
-				throw err;
-			}
+		let event = await Event.findById(eventId);
 
-			const newItem = new Item({
-				name,
-				price,
-				imgSrc: data.Location,
-				imgKey: data.Key,
-				weight: 0.0,
-			});
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
 
-			await Event.findByIdAndUpdate(eventId, { $push: { items: newItem } });
-			const savedItem = await newItem.save();
-			res.json(savedItem);
+		let data = await uploadImageToS3(req.file);
+
+		const newItem = new Item({
+			name,
+			price,
+			imgSrc: data.Location,
+			imgKey: data.Key,
+			weight: 0.0,
 		});
+
+		event.items.push(newItem);
+		await event.save();
+		const savedItem = await newItem.save();
+		res.json(savedItem);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
@@ -83,14 +65,19 @@ router.post('/add', upload.single('img'), (req, res) => {
 router.route('/weight').put(async (req, res) => {
 	const { itemId, weight } = req.body;
 
-	if (!itemId || !weight) {
+	if (!itemId || !weight)
 		res
 			.status(400)
 			.json("Required itemId and/or weight not provided in request's body.");
-	}
 
 	try {
-		await Item.findByIdAndUpdate(itemId, { weight: weight });
+		let item = await Item.findById(itemId);
+
+		if (!item)
+			return res.status(404).json('Could not find item specified by itemId.');
+
+		item.weight = weight;
+		await item.save();
 		res.json('Weight successfully updated for Item ' + itemId + '.');
 	} catch (err) {
 		console.log('Error ' + err);
@@ -111,25 +98,24 @@ router.route('/weight').put(async (req, res) => {
 router.delete('/', async (req, res) => {
 	const { itemId, eventId } = req.query;
 
-	if (!itemId || !eventId) {
-		res.status(400).json('Required itemId not provided in requets body.');
-	}
+	if (!itemId || !eventId)
+		res.status(400).json('Required itemId not provided in requet body.');
 
 	try {
-		const deletedItem = await Item.findByIdAndDelete(itemId);
-		await Event.findByIdAndUpdate(eventId, { $pull: { items: itemId } });
+		let event = await Event.findById(eventId);
+		let item = await Item.findById(itemId);
 
-		const params = {
-			Bucket,
-			Key: deletedItem.imgKey,
-		};
-		s3.deleteObject(params, (err, data) => {
-			if (err) {
-				throw err;
-			}
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+		if (!item)
+			return res.status(404).json('Could not find item specified by itemId.');
 
-			res.json({ deletedItem, deletedImage: data });
-		});
+		item.deleteOne();
+		event.items.pull(itemId);
+		await event.save();
+
+		let data = await deleteImageFromS3(item.imgKey);
+		res.json({ item, deletedImage: data });
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
