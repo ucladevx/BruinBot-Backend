@@ -5,7 +5,10 @@ const s3 = new AWS.S3({
 	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
 });
 
-const Bucket = 'bruinbot-item-images';
+let Bucket = `${process.env.BUCKET}/item-images`;
+if (process.env.NODE_ENV === 'test') {
+	Bucket = `${process.env.BUCKET_TEST}/item-images`;
+}
 
 /**
  * Converts degrees to radians.
