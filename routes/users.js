@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 
-let User = require('../models/user.model');
+let { User } = require('../models/user.model');
 
 router.route('/').get((req, res) => {
 	User.find()
@@ -26,9 +26,7 @@ router.route('/add').post((req, res) => {
 });
 
 router.route('/').delete((req, res) => {
-	//deletes by id
-	User.findOne({ firebase_id: req.body.firebase_id })
-		.then((user) => user.remove())
+	User.findOneAndDelete({ firebase_id: req.body.firebase_id })
 		.then(() => res.json('User ' + req.body.firebase_id + ' was deleted!'))
 		.catch((err) => res.status(400).json(err));
 });

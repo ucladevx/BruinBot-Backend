@@ -32,4 +32,4 @@ const eventSchema = new schema({
 
 const Event = mongoose.model('Event', eventSchema);
 
-module.exports = Event;
+module.exports.Event = Event;
