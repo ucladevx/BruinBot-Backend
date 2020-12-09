@@ -29,7 +29,6 @@ const bruinBotSchema = new schema({
 	},
 	path: {
 		type: mongoose.Schema.Types.ObjectId,
-		required: true,
 		ref: 'Path',
 		default: null,
 	},
