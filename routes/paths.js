@@ -105,11 +105,11 @@ mapRouter.route('/pathBetween').get(async (req, res) => {
 	res.json(nodes);
 });
 
-const alreadyHas = (node, set) => {
+const alreadyHas = (node, map) => {
 	//console.log(node)
 	//console.log(set);
-	for (let s of set){
-		if (node.location.latitude === s.location.latitude && node.location.longitude === s.location.longitude){
+	for (let n of map.keys()){
+		if (node.location.latitude === n.location.latitude && node.location.longitude === n.location.longitude){
 			return true;
 		}
 	}
@@ -122,7 +122,6 @@ const getPathBetween = async (start, end) => {
 	let fScore = new Map();
 	let cameFrom = new Map();
 	let queue = new Set();
-	let alreadyVisited = new Set();
 
 	gScore.set(start, 0);
 	fScore.set(start, heuristic(start, end));
@@ -141,7 +140,6 @@ const getPathBetween = async (start, end) => {
 		}
 		console.log(curNode);
 		queue.delete(curNode);
-		alreadyVisited.add(curNode);
 		if (curNode.location.latitude === end.location.latitude && curNode.location.longitude === end.location.longitude){
 			return await reconstructPath(cameFrom, curNode);
 		}
@@ -151,13 +149,14 @@ const getPathBetween = async (start, end) => {
 			let dist = points.length + 1;
 			//console.log(dist)
 			const tempG = dist + gScore.get(curNode);
-			if (gScore.get(neighbor) === undefined || tempG < gScore.get(neighbor)){
+			const beenVisited = alreadyHas(neighbor, gScore);
+			if (!beenVisited || tempG < gScore.get(neighbor)){
+				if (!beenVisited){
+					queue.add(neighbor);
+				}
 				gScore.set(neighbor, tempG);
 				fScore.set(neighbor, tempG + heuristic(neighbor, end));
 				cameFrom.set(neighbor, curNode);
-				if (!alreadyHas(neighbor, queue) && !alreadyHas(neighbor, alreadyVisited)){
-					queue.add(neighbor);
-				}
 			}
 		}
 	}
