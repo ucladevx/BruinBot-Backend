@@ -87,8 +87,13 @@ mapRouter.route('/').delete(async (req, res) => {
 	}
 
 	try {
-		const deletedPath = await Path.findByIdAndDelete(id);
-		res.json(deletedPath);
+		let path = await Path.findById(id);
+
+		if (!path)
+			return res.status(404).json('Could not find path specified by id.');
+
+		path.deleteOne();
+		res.json(`Successfully deleted path ${id}`);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
@@ -109,11 +114,16 @@ mapRouter.route('/nodes').delete(async (req, res) => {
 
 	try {
 		// delete node and any of its paths
-		const deletedNode = await MapNode.findByIdAndDelete(id);
-		const pathsStarting = await Path.deleteMany({ nodeA: deletedNode });
-		const pathsEnding = await Path.deleteMany({ nodeB: deletedNode });
+		let node = await MapNode.findById(id);
 
-		res.json({ node: deletedNode, numPaths: pathsStarting.n + pathsEnding.n });
+		if (!node)
+			return res.status(404).json('Could not find map node specified by id.');
+
+		node.deleteOne();
+		const pathsStarting = await Path.deleteMany({ nodeA: node });
+		const pathsEnding = await Path.deleteMany({ nodeB: node });
+
+		res.json({ node: node, numPaths: pathsStarting.n + pathsEnding.n });
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
