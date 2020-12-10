@@ -128,7 +128,7 @@ router.route('/').delete(async (req, res) => {
 				.status(404)
 				.json('Could not find user specified by firebase_id.');
 
-		user.deleteOne();
+		await user.deleteOne();
 		res.json('User ' + firebase_id + ' was deleted!');
 	} catch (err) {
 		console.log('Error: ' + err);

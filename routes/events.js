@@ -254,10 +254,10 @@ eventsRouter.route('/').delete(async (req, res) => {
 
 		for (var id of event.items) {
 			let item = await Item.findById(id);
-			if (item) item.deleteOne();
+			if (item) await item.deleteOne();
 		}
 
-		event.deleteOne();
+		await event.deleteOne();
 		res.json(`Successfully deleted event ${eventId} and its items`);
 	} catch (err) {
 		console.log('Error ' + err);

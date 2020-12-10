@@ -112,7 +112,7 @@ router.delete('/', async (req, res) => {
 		if (!item)
 			return res.status(404).json('Could not find item specified by itemId.');
 
-		item.deleteOne();
+		await item.deleteOne();
 		event.items.pull(itemId);
 		await event.save();
 
