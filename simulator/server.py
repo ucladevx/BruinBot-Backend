@@ -11,7 +11,7 @@ random.seed(time.time())
 
 # String id of the bot this server manages as identified on MongoDB; defaults to None
 botId = '5fbb7eaf447fa728f2f3abe0'
-pathId = ''
+pathId = '5fd4168b5021096c6bd37acb'
 
 # shared memory between processes
 # https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
@@ -32,6 +32,10 @@ def main_loop(loop, latitude, longitude):
     bot_payload = {
         "id": botId
     }
+    path_payload = {
+        "id": pathId
+    }
+
     bot = requests.get(baseURL + "/bots/", data=bot_payload)
 
     while True:
@@ -52,6 +56,8 @@ def main_loop(loop, latitude, longitude):
             "id": botId
         }
         requests.put(baseURL + "/bots/updateLocation", data=location_payload)
+
+        print(requests.get(baseURL + "/paths/path", data=path_payload).content)
 
         time.sleep(1)
 

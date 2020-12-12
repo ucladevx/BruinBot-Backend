@@ -85,7 +85,7 @@ botsRouter.route('/location').get((req, res) => {
 			console.log('Error: ' + err);
 			res.status(400).json(err);
 		} else {
-			res.json(bot.path);
+			res.json(bot.location);
 		}
 	});
 });
