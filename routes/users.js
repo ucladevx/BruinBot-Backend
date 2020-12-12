@@ -49,15 +49,16 @@ router.route('/add').post((req, res) => {
  */
 
 /**
- * Sets user given by firebase id as an organizer
+ * Adds/removes user given by firebase id as organizer based
+ * on the boolean passed in as isOrganizer
  */
-router.route('/makeOrganizer').put(async (req, res) => {
-	const { firebase_id } = req.body;
+router.route('/organizer').put(async (req, res) => {
+	const { firebase_id, isOrganizer } = req.body;
 
-	if (!firebase_id)
+	if (!firebase_id || isOrganizer === undefined)
 		return res
 			.status(400)
-			.json('Required firebase_id not provided in request body.');
+			.json('Required firebase_id / isOrganizer not provided in request body.');
 
 	try {
 		let user = await User.findOne({ firebase_id: firebase_id });
@@ -67,37 +68,14 @@ router.route('/makeOrganizer').put(async (req, res) => {
 				.status(404)
 				.json('Could not find user specified by firebase_id.');
 
-		user.isOrganizer = true;
+		user.isOrganizer = isOrganizer;
 		user.save();
-		res.json('User ' + req.body.firebase_id + ' was made organizer!');
-	} catch (err) {
-		console.log('Error: ' + err);
-		res.status(400).json(err);
-	}
-});
-
-/**
- * Removes user given by firebase id as an organizer
- */
-router.route('/removeOrganizer').put(async (req, res) => {
-	const { firebase_id } = req.body;
-
-	if (!firebase_id)
-		return res
-			.status(400)
-			.json('Required firebase_id not provided in request body.');
-
-	try {
-		let user = await User.findOne({ firebase_id: firebase_id });
-
-		if (!user)
-			return res
-				.status(404)
-				.json('Could not find user specified by firebase_id.');
-
-		user.isOrganizer = false;
-		user.save();
-		res.json('User ' + req.body.firebase_id + ' was made not an organizer!');
+		if (isOrganizer)
+			res.json('User ' + req.body.firebase_id + ' was made organizer!');
+		else
+			res.json(
+				'User ' + req.body.firebase_id + ' was removed as an organizer!'
+			);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);

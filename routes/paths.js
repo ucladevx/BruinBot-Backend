@@ -78,22 +78,22 @@ mapRouter.route('/').post(async (req, res) => {
  * Delete path by id, while keeping terminal map nodes.
  */
 mapRouter.route('/').delete(async (req, res) => {
-	const id = req.body.id;
+	const pathId = req.body.pathId;
 
-	if (!id) {
+	if (!pathId) {
 		return res.status(400).json({
-			error: 'Required id data not in request body.',
+			error: 'Required pathId data not in request body.',
 		});
 	}
 
 	try {
-		let path = await Path.findById(id);
+		let path = await Path.findById(pathId);
 
 		if (!path)
-			return res.status(404).json('Could not find path specified by id.');
+			return res.status(404).json('Could not find path specified by pathId.');
 
 		await path.deleteOne();
-		res.json(`Successfully deleted path ${id}`);
+		res.json(`Successfully deleted path ${pathId}`);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
@@ -104,20 +104,22 @@ mapRouter.route('/').delete(async (req, res) => {
  * Delete map node and all of its paths by id.
  */
 mapRouter.route('/nodes').delete(async (req, res) => {
-	const id = req.body.id;
+	const pathId = req.body.pathId;
 
-	if (!id) {
+	if (!pathId) {
 		return res.status(400).json({
-			error: 'Required id data not in request body.',
+			error: 'Required pathId data not in request body.',
 		});
 	}
 
 	try {
 		// delete node and any of its paths
-		let node = await MapNode.findById(id);
+		let node = await MapNode.findById(pathId);
 
 		if (!node)
-			return res.status(404).json('Could not find map node specified by id.');
+			return res
+				.status(404)
+				.json('Could not find map node specified by pathId.');
 
 		await node.deleteOne();
 		const pathsStarting = await Path.deleteMany({ nodeA: node });
