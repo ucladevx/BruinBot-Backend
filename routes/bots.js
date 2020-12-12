@@ -85,9 +85,31 @@ botsRouter.route('/location').get((req, res) => {
 			console.log('Error: ' + err);
 			res.status(400).json(err);
 		} else {
-			res.json(bot.location);
+			res.json(bot.path);
 		}
 	});
+});
+
+/**
+ * Returns current path of the BruinBot with the provided id.
+ */
+botsRouter.get('/path', async (req, res) => {
+	const botId = req.body.id;
+
+	if (!botId) res.status(400).json('Required bot id data not in request body.');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Bot with specified id does not exist.');
+		if (bot.path == null)
+			return res.status(409).json('Bot with specified id has null path.');
+		res.json(bot.path);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**

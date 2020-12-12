@@ -11,6 +11,7 @@ random.seed(time.time())
 
 # String id of the bot this server manages as identified on MongoDB; defaults to None
 botId = '5fbb7eaf447fa728f2f3abe0'
+pathId = ''
 
 # shared memory between processes
 # https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
@@ -28,18 +29,30 @@ def display_bot_status():
 
 def main_loop(loop, latitude, longitude):
     """The main loop for the robot's internal processing."""
+    bot_payload = {
+        "id": botId
+    }
+    bot = requests.get(baseURL + "/bots/", data=bot_payload)
+
     while True:
         if loop.value != True:
             return
+
+        if int(time.time()) % 10 == 0:
+            bot = requests.get(baseURL + "/bots/", data=bot_payload)
+            
         random.seed(time.time())
         latitude.value = random.uniform(-90, 90)
         longitude.value = random.uniform(-180, 180)
-        payload = {
+
+        # update bot location on server
+        location_payload = {
             "latitude": str(latitude.value),
             "longitude": str(longitude.value),
             "id": botId
         }
-        requests.put(baseURL + "/bots/updateLocation", data=payload)
+        requests.put(baseURL + "/bots/updateLocation", data=location_payload)
+
         time.sleep(1)
 
 if __name__ == "__main__":
