@@ -23,63 +23,80 @@ eventsRouter.route('/').get((req, res) => {
 /**
  * Gets the list of items for an event by id
  */
-eventsRouter.route('/items').get((req, res) => {
+eventsRouter.route('/items').get(async (req, res) => {
 	const eventId = req.query.eventId;
 
 	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	Event.findById(eventId)
-		.then(async (event) => {
-			console.log(event);
-			let items = await Item.find().where('_id').in(event.items).exec();
-			res.json(items);
-		})
-		.catch((err) => res.status(400).json(err));
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		let items = await Item.find().where('_id').in(event.items).exec();
+		res.json(items);
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
  * Gets the enriched list of bots (actual items, not just item_ids) for an event by id
  */
-eventsRouter.route('/bots').get((req, res) => {
+eventsRouter.route('/bots').get(async (req, res) => {
 	const eventId = req.query.eventId;
 
 	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	Event.findById(eventId)
-		.then(async (event) => {
-			let bots = await BruinBot.find()
-				.populate({
-					path: 'inventory.item',
-					model: 'Item',
-				})
-				.where('_id')
-				.in(event.bots)
-				.exec();
-			res.json(bots);
-		})
-		.catch((err) => res.status(400).json(err));
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		let bots = await BruinBot.find()
+			.populate({
+				path: 'inventory.item',
+				model: 'Item',
+			})
+			.where('_id')
+			.in(event.bots)
+			.exec();
+		res.json(bots);
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
  * Gets the list of admins for an event by id
  */
-eventsRouter.route('/admins').get((req, res) => {
+eventsRouter.route('/admins').get(async (req, res) => {
 	const eventId = req.query.eventId;
 
 	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	Event.findById(eventId)
-		.then(async (event) => {
-			let admins = await User.find().where('_id').in(event.admins).exec();
-			res.json(admins);
-		})
-		.catch((err) => res.status(400).json(err));
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		let admins = await User.find().where('_id').in(event.admins).exec();
+		res.json(admins);
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
@@ -130,10 +147,10 @@ eventsRouter.route('/add').post((req, res) => {
 /**
  * Adds a bot id to an event
  */
-eventsRouter.route('/bots').put((req, res) => {
-	const { id, bot_id } = req.body;
+eventsRouter.route('/bots').put(async (req, res) => {
+	const { eventId, bot_id } = req.body;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
@@ -141,19 +158,28 @@ eventsRouter.route('/bots').put((req, res) => {
 		return res.status(400).json('Please provide the id of the bot.');
 	}
 
-	Event.findByIdAndUpdate(id, { $push: { bots: bot_id } }, function (err) {
-		if (err) res.status(400).json(err);
-		else res.json('Bot ' + bot_id + ' was added to Event ' + id + '.');
-	});
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		event.bots.push(bot_id);
+		await event.save();
+		res.json('Bot ' + bot_id + ' was added to Event ' + eventId + '.');
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
  * Adds an item id to an event
  */
-eventsRouter.route('/items').put((req, res) => {
-	const { id, item_id } = req.body;
+eventsRouter.route('/items').put(async (req, res) => {
+	const { eventId, item_id } = req.body;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
@@ -161,19 +187,28 @@ eventsRouter.route('/items').put((req, res) => {
 		return res.status(400).json('Please provide the id of the item.');
 	}
 
-	Event.findByIdAndUpdate(id, { $push: { items: item_id } }, function (err) {
-		if (err) res.status(400).json(err);
-		else res.json('Item ' + item_id + ' was added to Event ' + id + '.');
-	});
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		event.items.push(item_id);
+		await event.save();
+		res.json('Item ' + item_id + ' was added to Event ' + eventId + '.');
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
  * Adds an admin id to the list of admin ids to an event specified by id
  */
-eventsRouter.route('/admins').put((req, res) => {
-	const { id, admin_id } = req.body;
+eventsRouter.route('/admins').put(async (req, res) => {
+	const { eventId, admin_id } = req.body;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
@@ -181,10 +216,19 @@ eventsRouter.route('/admins').put((req, res) => {
 		return res.status(400).json('Please provide the id of the admin.');
 	}
 
-	Event.findByIdAndUpdate(id, { $push: { admins: admin_id } }, function (err) {
-		if (err) res.status(400).json(err);
-		else res.json('Admin ' + admin_id + ' was added to Event ' + id + '.');
-	});
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		event.admins.push(admin_id);
+		await event.save();
+		res.json('Admin ' + admin_id + ' was added to Event ' + eventId + '.');
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
@@ -192,27 +236,33 @@ eventsRouter.route('/admins').put((req, res) => {
  */
 
 /**
- * Deletes an event by id
+ * Deletes an event by id and all items associated with the event
  *
- * TODO: figure out how to handle the event being successfully deleted but its items
- * failing to delete, leaving stranded items in the database
  */
-eventsRouter.route('/').delete((req, res) => {
-	const eventId = req.body.id;
+eventsRouter.route('/').delete(async (req, res) => {
+	const eventId = req.body.eventId;
 
-	Event.findByIdAndDelete(eventId)
-		.then((event) => {
-			console.log(`Successfully deleted event: ${event}`);
-			return Item.deleteMany({ _id: { $in: event.items } });
-		})
-		.then((result) => {
-			console.log(`Successfully deleted event's items: ${result}`);
-			res.json(`Succesfully deleted event's items.`);
-		})
-		.catch((err) => {
-			console.log('Error: ' + err);
-			res.status(400).json(err);
-		});
+	if (!eventId) {
+		return res.status(400).json('Please provide the id of the event.');
+	}
+
+	try {
+		let event = await Event.findById(eventId);
+
+		if (!event)
+			return res.status(404).json('Could not find event specified by eventId.');
+
+		for (var id of event.items) {
+			let item = await Item.findById(id);
+			if (item) await item.deleteOne();
+		}
+
+		await event.deleteOne();
+		res.json(`Successfully deleted event ${eventId} and its items`);
+	} catch (err) {
+		console.log('Error ' + err);
+		res.status(400).json(err);
+	}
 });
 
 module.exports = eventsRouter;
