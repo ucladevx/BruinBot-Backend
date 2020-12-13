@@ -6,8 +6,8 @@ let { User } = require('../models/user.model');
 let admin = require('firebase-admin');
 
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
-  databaseURL: "https://bruinbot-8d68e.firebaseio.com"
+	credential: admin.credential.applicationDefault(),
+	databaseURL: 'https://bruinbot-8d68e.firebaseio.com',
 });
 
 router.route('/').get((req, res) => {
@@ -21,14 +21,14 @@ router.route('/add').post(async (req, res) => {
 	const firebase_id_token = req.body.firebase_id_token;
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
 		uid = decodedToken.uid;
-	} catch (err){
+	} catch (err) {
 		console.log('Error ' + err);
 		res.status(400).json(err);
 		return;
 	}
-	
+
 	const newUser = new User({
 		firebase_id: uid,
 		username: username,
@@ -44,9 +44,9 @@ router.route('/').delete(async (req, res) => {
 	const firebase_id_token = req.body.firebase_id_token;
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
 		uid = decodedToken.uid;
-	} catch (err){
+	} catch (err) {
 		console.log('Error ' + err);
 		res.status(400).json(err);
 		return;
@@ -57,13 +57,12 @@ router.route('/').delete(async (req, res) => {
 });
 
 router.route('/makeOrganizer').post(async (req, res) => {
-
 	const firebase_id_token = req.body.firebase_id_token;
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
 		uid = decodedToken.uid;
-	} catch (err){
+	} catch (err) {
 		console.log('Error ' + err);
 		res.status(400).json(err);
 		return;
@@ -74,20 +73,17 @@ router.route('/makeOrganizer').post(async (req, res) => {
 			user.isOrganizer = true;
 			user.save();
 		})
-		.then(() =>
-			res.json('User ' + uid + ' was made organizer!')
-		)
+		.then(() => res.json('User ' + uid + ' was made organizer!'))
 		.catch((err) => res.status(400).json(err));
 });
 
 router.route('/removeOrganizer').post(async (req, res) => {
-
 	const firebase_id_token = req.body.firebase_id_token;
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
 		uid = decodedToken.uid;
-	} catch (err){
+	} catch (err) {
 		console.log('Error ' + err);
 		res.status(400).json(err);
 		return;
@@ -98,9 +94,7 @@ router.route('/removeOrganizer').post(async (req, res) => {
 			user.isOrganizer = false;
 			user.save();
 		})
-		.then(() =>
-			res.json('User ' + uid + ' was made not an organizer!')
-		)
+		.then(() => res.json('User ' + uid + ' was made not an organizer!'))
 		.catch((err) => res.status(400).json(err));
 });
 
