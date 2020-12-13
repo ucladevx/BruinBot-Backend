@@ -3,6 +3,12 @@ const express = require('express');
 const router = express.Router();
 
 let { User } = require('../models/user.model');
+let admin = require('firebase-admin');
+
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+  databaseURL: "https://bruinbot-8d68e.firebaseio.com"
+});
 
 router.route('/').get((req, res) => {
 	User.find()
@@ -10,12 +16,21 @@ router.route('/').get((req, res) => {
 		.catch((err) => res.status(400).json(err));
 });
 
-router.route('/add').post((req, res) => {
+router.route('/add').post(async (req, res) => {
 	const username = req.body.username;
-	const firebase_id = req.body.firebase_id;
-
+	const firebase_id_token = req.body.firebase_id_token;
+	let uid;
+	try {
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		uid = decodedToken.uid;
+	} catch (err){
+		console.log('Error ' + err);
+		res.status(400).json(err);
+		return;
+	}
+	
 	const newUser = new User({
-		firebase_id: firebase_id,
+		firebase_id: uid,
 		username: username,
 	});
 
@@ -25,32 +40,66 @@ router.route('/add').post((req, res) => {
 		.catch((err) => res.status(400).json(err));
 });
 
-router.route('/').delete((req, res) => {
-	User.findOneAndDelete({ firebase_id: req.body.firebase_id })
-		.then(() => res.json('User ' + req.body.firebase_id + ' was deleted!'))
+router.route('/').delete(async (req, res) => {
+	const firebase_id_token = req.body.firebase_id_token;
+	let uid;
+	try {
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		uid = decodedToken.uid;
+	} catch (err){
+		console.log('Error ' + err);
+		res.status(400).json(err);
+		return;
+	}
+	User.findOneAndDelete({ firebase_id: uid })
+		.then(() => res.json('User ' + uid + ' was deleted!'))
 		.catch((err) => res.status(400).json(err));
 });
 
-router.route('/makeOrganizer').post((req, res) => {
-	User.findOne({ firebase_id: req.body.firebase_id })
+router.route('/makeOrganizer').post(async (req, res) => {
+
+	const firebase_id_token = req.body.firebase_id_token;
+	let uid;
+	try {
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		uid = decodedToken.uid;
+	} catch (err){
+		console.log('Error ' + err);
+		res.status(400).json(err);
+		return;
+	}
+
+	User.findOne({ firebase_id: uid })
 		.then((user) => {
 			user.isOrganizer = true;
 			user.save();
 		})
 		.then(() =>
-			res.json('User ' + req.body.firebase_id + ' was made organizer!')
+			res.json('User ' + uid + ' was made organizer!')
 		)
 		.catch((err) => res.status(400).json(err));
 });
 
-router.route('/removeOrganizer').post((req, res) => {
-	User.findOne({ firebase_id: req.body.firebase_id })
+router.route('/removeOrganizer').post(async (req, res) => {
+
+	const firebase_id_token = req.body.firebase_id_token;
+	let uid;
+	try {
+		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token)
+		uid = decodedToken.uid;
+	} catch (err){
+		console.log('Error ' + err);
+		res.status(400).json(err);
+		return;
+	}
+
+	User.findOne({ firebase_id: uid })
 		.then((user) => {
 			user.isOrganizer = false;
 			user.save();
 		})
 		.then(() =>
-			res.json('User ' + req.body.firebase_id + ' was made not an organizer!')
+			res.json('User ' + uid + ' was made not an organizer!')
 		)
 		.catch((err) => res.status(400).json(err));
 });
