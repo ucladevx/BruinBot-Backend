@@ -49,7 +49,8 @@ mapRouter.route('/').post(async (req, res) => {
 				'location.longitude': lon,
 			});
 			endPoints.push(
-				existingNode || new MapNode({ latitude: lat, longitude: lon })
+				existingNode ||
+					new MapNode({ location: { latitude: lat, longitude: lon } })
 			);
 		} else {
 			points.push({ latitude: lat, longitude: lon });
