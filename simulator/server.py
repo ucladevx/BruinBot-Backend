@@ -12,11 +12,11 @@ UPDATE_INTERVAL = 5
 BASE_URL = 'http://localhost:8080'
 EVENT_ID = '5fd80707f3df17df0d703a5d'
 
-# # Shared memory between processes
-# # https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
-# loop = Value('b', True)
-# latitude = Value('d', 0)
-# longitude = Value('d', 0)
+# Shared memory between processes
+# https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
+loop = Value('b', True)
+latitude = Value('d', 0)
+longitude = Value('d', 0)
 
 @app.before_first_request
 def initial():
