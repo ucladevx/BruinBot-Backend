@@ -92,15 +92,15 @@ eventsRouter.route('/admins').get((req, res) => {
  * provided in the request body
  */
 eventsRouter.route('/add').post((req, res) => {
-	const { name, bot_ids, admin_ids } = req.body;
+	const { name, botIds, adminIds } = req.body;
 
-	if (!name || !bot_ids || !admin_ids) {
+	if (!name || !botIds || !adminIds) {
 		return res
 			.status(400)
 			.json('Please provide name, bots, and admins of the event.');
 	}
 
-	if (bot_ids.length == 0 || admin_ids.length == 0) {
+	if (botIds.length == 0 || adminIds.length == 0) {
 		return res
 			.status(400)
 			.json('The list of bot IDs and admin IDs cannot be empty');
@@ -114,8 +114,8 @@ eventsRouter.route('/add').post((req, res) => {
 	const newEvent = new Event({
 		name: name,
 		items: item_ids,
-		bots: bot_ids,
-		admins: admin_ids,
+		bots: botIds,
+		admins: adminIds,
 	});
 
 	newEvent
@@ -132,19 +132,19 @@ eventsRouter.route('/add').post((req, res) => {
  * Adds a bot id to an event
  */
 eventsRouter.route('/bots').put((req, res) => {
-	const { id, bot_id } = req.body;
+	const { eventId, botId } = req.body;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	if (!bot_id) {
+	if (!botId) {
 		return res.status(400).json('Please provide the id of the bot.');
 	}
 
-	Event.findByIdAndUpdate(id, { $push: { bots: bot_id } }, function (err) {
+	Event.findByIdAndUpdate(eventId, { $push: { bots: botId } }, function (err) {
 		if (err) res.status(400).json(err);
-		else res.json('Bot ' + bot_id + ' was added to Event ' + id + '.');
+		else res.json('Bot ' + botId + ' was added to Event ' + eventId + '.');
 	});
 });
 
@@ -152,19 +152,21 @@ eventsRouter.route('/bots').put((req, res) => {
  * Adds an item id to an event
  */
 eventsRouter.route('/items').put((req, res) => {
-	const { id, item_id } = req.body;
+	const { eventId, itemId } = req.body;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	if (!item_id) {
+	if (!itemId) {
 		return res.status(400).json('Please provide the id of the item.');
 	}
 
-	Event.findByIdAndUpdate(id, { $push: { items: item_id } }, function (err) {
+	Event.findByIdAndUpdate(eventId, { $push: { items: itemId } }, function (
+		err
+	) {
 		if (err) res.status(400).json(err);
-		else res.json('Item ' + item_id + ' was added to Event ' + id + '.');
+		else res.json('Item ' + itemId + ' was added to Event ' + eventId + '.');
 	});
 });
 
@@ -172,19 +174,21 @@ eventsRouter.route('/items').put((req, res) => {
  * Adds an admin id to the list of admin ids to an event specified by id
  */
 eventsRouter.route('/admins').put((req, res) => {
-	const { id, admin_id } = req.body;
+	const { eventId, admin_id: adminId } = req.body;
 
-	if (!id) {
+	if (!eventId) {
 		return res.status(400).json('Please provide the id of the event.');
 	}
 
-	if (!admin_id) {
+	if (!adminId) {
 		return res.status(400).json('Please provide the id of the admin.');
 	}
 
-	Event.findByIdAndUpdate(id, { $push: { admins: admin_id } }, function (err) {
+	Event.findByIdAndUpdate(eventId, { $push: { admins: adminId } }, function (
+		err
+	) {
 		if (err) res.status(400).json(err);
-		else res.json('Admin ' + admin_id + ' was added to Event ' + id + '.');
+		else res.json('Admin ' + adminId + ' was added to Event ' + eventId + '.');
 	});
 });
 
@@ -199,7 +203,7 @@ eventsRouter.route('/admins').put((req, res) => {
  * failing to delete, leaving stranded items in the database
  */
 eventsRouter.route('/').delete((req, res) => {
-	const eventId = req.body.id;
+	const eventId = req.body.eventId;
 
 	Event.findByIdAndDelete(eventId)
 		.then((event) => {
