@@ -22,7 +22,7 @@ function degToRad(degrees) {
 }
 
 /**
- * Returns the distance between two coordinates in kilometers.
+ * Returns the distance between two coordinates in meters.
  * Uses the haversine formula.
  *
  * @param {number} lat1 Latitude of the first coordinate

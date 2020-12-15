@@ -2,6 +2,8 @@ const express = require('express');
 
 const mapRouter = express.Router();
 
+const { botSpeed } = require('../constants');
+const { coordDistanceM } = require('./utils');
 const { MapNode, Path } = require('../models/map.model');
 
 /**
@@ -9,11 +11,47 @@ const { MapNode, Path } = require('../models/map.model');
  */
 
 /**
- * Get all map nodes.
+ * Get all map nodes
  */
 mapRouter.route('/nodes').get(async (req, res) => {
 	try {
 		const nodes = await MapNode.find();
+		res.json(nodes);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Get all map nodes along with distance (m) and eta (minutes) to specified location
+ *
+ * @param {number} Latitude of specified location
+ * @param {number} Longitude of specified location
+ */
+mapRouter.route('/nodes/location').get(async (req, res) => {
+	const { latitude, longitude } = req.body;
+
+	if (!latitude || !longitude)
+		res.status(400).json('Latitude and/or longitude not provided.');
+
+	try {
+		let nodes = await MapNode.find();
+		nodes = JSON.parse(JSON.stringify(nodes));
+
+		for (let i = 0; i < nodes.length; i++) {
+			let distance = coordDistanceM(
+				nodes[i].location.latitude,
+				nodes[i].location.longitude,
+				latitude,
+				longitude
+			);
+
+			let eta = distance / botSpeed / 60;
+			nodes[i].distance = distance;
+			nodes[i].eta = eta;
+		}
+		console.log(nodes);
 		res.json(nodes);
 	} catch (err) {
 		console.log('Error: ' + err);
