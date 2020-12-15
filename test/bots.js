@@ -136,7 +136,7 @@ describe('Bot', () => {
 				.request(app)
 				.delete('/bots')
 				.send({
-					id: savedBot._id,
+					botId: savedBot._id,
 				})
 				.then(async (res) => {
 					assert.strictEqual(res.status, 200);
@@ -150,7 +150,7 @@ describe('Bot', () => {
 				.request(app)
 				.delete('/bots')
 				.send({
-					id: 'clearlyWrongId',
+					botId: 'clearlyWrongId',
 				})
 				.then(async (res) => {
 					assert.notStrictEqual(res.status, 200);
