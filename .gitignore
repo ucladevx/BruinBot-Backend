@@ -20,8 +20,5 @@ env/
 venv/
 ENV/
 
-# bot simulator local id
-.botid
-
 # istanbul
 .nyc_output/
