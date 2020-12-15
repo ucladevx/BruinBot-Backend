@@ -43,22 +43,6 @@ describe('Bot', () => {
 		await BruinBot.deleteMany({});
 	});
 
-	describe('get /bots', () => {
-		it('Should return list of all BruinBots', async () => {
-			await createAndSaveBot(exampleBotA);
-			await createAndSaveBot(exampleBotB);
-
-			return await chai
-				.request(app)
-				.get('/bots')
-				.then((res) => {
-					assert.strictEqual(res.status, 200);
-					assert.ok(Array.isArray(res.body));
-					assert.strictEqual(res.body.length, 2);
-				});
-		});
-	});
-
 	describe('get /bots/bot', () => {
 		it('Should return a specific BruinBot', async () => {
 			let botA = await createAndSaveBot(exampleBotA);

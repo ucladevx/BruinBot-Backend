@@ -5,25 +5,8 @@ const mapRouter = express.Router();
 const { MapNode, Path } = require('../models/map.model');
 
 /**
- * Returns path with the provided id.
+ * ----------------- GET (return information about objects) ----------------
  */
-mapRouter.get('/path', async (req, res) => {
-	const pathId = req.body.id;
-
-	if (!pathId)
-		res.status(400).json('Required path id data not in request body.');
-
-	try {
-		let path = await Path.findById(pathId);
-
-		if (!path)
-			return res.status(404).json('Path with specified id does not exist.');
-		res.json(path);
-	} catch (err) {
-		console.log('Error: ' + err);
-		res.status(400).json(err);
-	}
-});
 
 /**
  * Get all map nodes.
@@ -37,6 +20,10 @@ mapRouter.route('/nodes').get(async (req, res) => {
 		res.status(400).json(err);
 	}
 });
+
+/**
+ * ------------------------- POST (add new objects) -------------------------
+ */
 
 /**
  * Create path from array of coords.
@@ -94,6 +81,10 @@ mapRouter.route('/').post(async (req, res) => {
 		res.status(400).json(err);
 	}
 });
+
+/**
+ * ------------------------- DELETE (remove objects) ------------------------
+ */
 
 /**
  * Delete path by id, while keeping terminal map nodes.

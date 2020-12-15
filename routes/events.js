@@ -56,6 +56,7 @@ eventsRouter.route('/bots').get((req, res) => {
 					path: 'inventory.item',
 					model: 'Item',
 				})
+				.populate('path')
 				.where('_id')
 				.in(event.bots)
 				.exec();

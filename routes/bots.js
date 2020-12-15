@@ -11,20 +11,6 @@ let util = require('./utils');
  */
 
 /**
- * Return all BruinBot objects.
- */
-botsRouter.route('/').get((req, res) => {
-	BruinBot.find({}, function (err, bots) {
-		if (err) {
-			console.log('Error: ' + err);
-			res.status(404).json(err);
-		} else {
-			res.json(bots);
-		}
-	});
-});
-
-/**
  * Return a specific BruinBot by id
  */
 botsRouter.route('/bot').get(async (req, res) => {
@@ -32,7 +18,12 @@ botsRouter.route('/bot').get(async (req, res) => {
 	if (!botId) res.status(400).json(`'botId' not provided in request params`);
 
 	try {
-		let data = await BruinBot.findById(botId);
+		let data = await BruinBot.findById(botId)
+			.populate({
+				path: 'inventory.item',
+				model: 'Item',
+			})
+			.populate('path');
 		res.json(data);
 	} catch (err) {
 		res.status(404).json(err);
