@@ -250,7 +250,7 @@ botsRouter.put('/updatePath', async (req, res) => {
 
 	try {
 		let bot = await BruinBot.findById(botId);
-		let pathCount = await Path.count(pathId);
+		let pathCount = await Path.countDocuments(pathId);
 
 		if (!bot)
 			return res.status(404).json('Bot with specified id does not exist.');
