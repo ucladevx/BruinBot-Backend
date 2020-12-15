@@ -88,7 +88,6 @@ router.route('/organizer').put(async (req, res) => {
 
 /**
  * Deletes a user by firebase id
- *
  */
 router.route('/').delete(async (req, res) => {
 	const { firebase_id } = req.body;
@@ -112,16 +111,6 @@ router.route('/').delete(async (req, res) => {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
-});
-
-/**
- * ------------------------- DELETE (remove objects) ------------------------
- */
-
-router.route('/').delete((req, res) => {
-	User.findOneAndDelete({ firebase_id: req.body.firebase_id })
-		.then(() => res.json('User ' + req.body.firebase_id + ' was deleted!'))
-		.catch((err) => res.status(400).json(err));
 });
 
 module.exports = router;
