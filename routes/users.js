@@ -88,7 +88,6 @@ router.route('/organizer').put(async (req, res) => {
 
 /**
  * Deletes a user by firebase id
- *
  */
 router.route('/').delete(async (req, res) => {
 	const { firebase_id } = req.body;

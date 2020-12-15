@@ -5,6 +5,10 @@ const mapRouter = express.Router();
 const { MapNode, Path } = require('../models/map.model');
 
 /**
+ * ----------------- GET (return information about objects) ----------------
+ */
+
+/**
  * Get all map nodes.
  */
 mapRouter.route('/nodes').get(async (req, res) => {
@@ -16,6 +20,10 @@ mapRouter.route('/nodes').get(async (req, res) => {
 		res.status(400).json(err);
 	}
 });
+
+/**
+ * ------------------------- POST (add new objects) -------------------------
+ */
 
 /**
  * Create path from array of coords.
@@ -74,6 +82,10 @@ mapRouter.route('/').post(async (req, res) => {
 		res.status(400).json(err);
 	}
 });
+
+/**
+ * ------------------------- DELETE (remove objects) ------------------------
+ */
 
 /**
  * Delete path by id, while keeping terminal map nodes.
