@@ -281,10 +281,20 @@ mapRouter.route('/nodes/location').get(async (req, res) => {
  */
 
 /**
- * Create path from array of coords.
+ * Create path from array of coords. The first and last coordinates in the array
+ * are terminal nodes. If either terminal node does not already exist (have the
+ * exact same coordinates), then that node is created and persisted, along with
+ * the name of the node, if given. Note that this path is meant to be
+ * bi-directional - do not get confused by the naming of start and end.
+ *
+ * @param {Array<Array<number>>} path List of coordinates in path
+ * @param {string=} start Name of first node (optional)
+ * @param {string=} end Name of end node (optional)
  */
 mapRouter.route('/').post(async (req, res) => {
 	const path = req.body.path;
+	const start = req.body.start;
+	const end = req.body.end;
 
 	if (!path || !Array.isArray(path) || path.length < 2) {
 		return res.status(400).json({
@@ -305,16 +315,38 @@ mapRouter.route('/').post(async (req, res) => {
 		}
 
 		if (i === 0 || i === path.length - 1) {
-			// If a map node already exists for a location,
-			// use it instead of creating a new one.
+			/**
+			 * If a map node already exists for a location, use it instead of
+			 * creating a new one.
+			 */
 			const existingNode = await MapNode.findOne({
 				'location.latitude': lat,
 				'location.longitude': lon,
 			});
-			endPoints.push(
-				existingNode ||
-					new MapNode({ location: { latitude: lat, longitude: lon } })
-			);
+
+			if (i == 0) {
+				let newMapNode = start
+					? new MapNode({
+							name: start,
+							location: { latitude: lat, longitude: lon },
+					  })
+					: new MapNode({
+							location: { latitude: lat, longitude: lon },
+					  });
+
+				endPoints.push(existingNode || newMapNode);
+			} else {
+				let newMapNode = end
+					? new MapNode({
+							name: end,
+							location: { latitude: lat, longitude: lon },
+					  })
+					: new MapNode({
+							location: { latitude: lat, longitude: lon },
+					  });
+
+				endPoints.push(existingNode || newMapNode);
+			}
 		} else {
 			points.push({ latitude: lat, longitude: lon });
 		}
@@ -327,7 +359,7 @@ mapRouter.route('/').post(async (req, res) => {
 	});
 
 	try {
-		// save new map nodes and path
+		// Save new map nodes and path
 		await endPoints[0].save();
 		await endPoints[1].save();
 		const savedPath = await newPath.save();
