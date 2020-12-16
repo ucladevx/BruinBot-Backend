@@ -3,22 +3,14 @@ const express = require('express');
 const mapRouter = express.Router();
 
 const { Location, MapNode, Path } = require('../models/map.model');
-//const { coordDistanceM } = require('./utils');
-
-const getEuclidianDistance = (node1, node2) => {
-	return Math.sqrt(
-		Math.pow(node1.location.latitude - node2.location.latitude, 2) +
-			Math.pow(node1.location.longitude - node2.location.longitude, 2)
-	);
-};
+const { coordDistanceM } = require('./utils');
 
 const heuristic = (node, endpoint) => {
-	//return coordDistanceM(path.node.latitude, path.nodeB.longitude, endpoint.longitude, endpoint.latitude);
-	//const nodeB = await MapNode.findById(path.nodeB);
-	//console.log(node);
-	return (
-		Math.abs(node.location.latitude - endpoint.location.latitude) +
-		Math.abs(node.location.longitude - endpoint.location.longitude)
+	return coordDistanceM(
+		node.location.latitude,
+		node.location.longitude,
+		endpoint.location.longitude,
+		endpoint.location.latitude
 	);
 };
 
@@ -32,10 +24,21 @@ const getClosestMapNode = async (latitude, longitude) => {
 	});
 	const mapNodes = await MapNode.find();
 	let closestNode = mapNodes[0];
-	let closestDist = getEuclidianDistance(mapNodes[0], curLocation);
+	let closestDist = coordDistanceM(
+		mapNodes[0].location.latitude,
+		mapNodes[0].location.longitude,
+		curLocation.location.latitude,
+		curLocation.location.longitude
+	);
 	for (let node of mapNodes) {
-		if (getEuclidianDistance(node, curLocation) < closestDist) {
-			closestDist = getEuclidianDistance(node, curLocation);
+		const coordDist = coordDistanceM(
+			node.location.latitude,
+			node.location.longitude,
+			curLocation.location.latitude,
+			curLocation.location.longitude
+		);
+		if (coordDist < closestDist) {
+			closestDist = coordDist;
 			closestNode = node;
 		}
 	}
@@ -175,12 +178,6 @@ const getPathBetween = async (start, end) => {
 	}
 	return 'No Path Found';
 };
-
-mapRouter.route('/resetPath').delete(async (req, res) => {
-	await Path.deleteMany({});
-	await MapNode.deleteMany({});
-	res.json('done');
-});
 
 /**
  * Get all map nodes.
