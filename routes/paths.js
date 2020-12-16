@@ -2,11 +2,9 @@ const express = require('express');
 
 const mapRouter = express.Router();
 
-const { Location, MapNode, Path } = require('../models/map.model');
-const { coordDistanceM } = require('./utils');
+const { MapNode, Path } = require('../models/map.model');
 const { botSpeed } = require('../constants');
 const { coordDistanceM } = require('./utils');
-const { MapNode, Path } = require('../models/map.model');
 
 const heuristic = (node, endpoint) => {
 	return coordDistanceM(
