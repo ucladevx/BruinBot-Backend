@@ -2,20 +2,32 @@ const express = require('express');
 
 const mapRouter = express.Router();
 
-const { MapNode, Path } = require('../models/map.model');
+const { Location, MapNode, Path } = require('../models/map.model');
 const { botSpeed } = require('../constants');
 const { coordDistanceM } = require('./utils');
 
-const heuristic = (node, endpoint) => {
+/**
+ * @param {MapNode} node The node from which to calculate the heuristic
+ * @param {MapNode} endpoint The endpoint of the requested path
+ *
+ * @returns {number} The heuristic (currently the distance between the coords)
+ */
+function heuristic(node, endpoint) {
 	return coordDistanceM(
 		node.location.latitude,
 		node.location.longitude,
 		endpoint.location.longitude,
 		endpoint.location.latitude
 	);
-};
+}
 
-const getClosestMapNode = async (latitude, longitude) => {
+/**
+ * @param {number} latitude Latitude of cooordinate to get closest MapNode from
+ * @param {number} longitude Longiture of coordinate to get closest MapNode from
+ *
+ * @returns {MapNode} The closest MapNode to the coordinate
+ */
+async function getClosestMapNode(latitude, longitude) {
 	//Might be slow
 	const curLocation = new MapNode({
 		location: {
@@ -45,9 +57,14 @@ const getClosestMapNode = async (latitude, longitude) => {
 	}
 	//console.log(closestNode);
 	return closestNode;
-};
+}
 
-const getNeighbors = async (node) => {
+/**
+ * @param {MapNode} node The MapNode from which to get all its neighbors
+ *
+ * @returns {Array<MapNode>} An array of neighboring MapNodes
+ */
+async function getNeighbors(node) {
 	let nodes = [];
 	const pathsA = await Path.find({ nodeA: node });
 	for (let path of pathsA) {
@@ -61,9 +78,15 @@ const getNeighbors = async (node) => {
 	}
 	//console.log(nodes);
 	return nodes;
-};
+}
 
-const reconstructPath = async (cameFrom, curNode) => {
+/**
+ * @param {Map<MapNode, MapNode>} cameFrom A map that maps a MapNode to the MapNode that comes before it
+ * @param {MapNode} curNode The node to reconstruct the path from (normally the ending MapNode)
+ *
+ * @returns {Array<Location>} A list of locations from the starting MapNode to curNode
+ */
+async function reconstructPath(cameFrom, curNode) {
 	let locations = [curNode.location];
 	while (cameFrom.has(curNode)) {
 		let nextNode = cameFrom.get(curNode);
@@ -75,9 +98,15 @@ const reconstructPath = async (cameFrom, curNode) => {
 		curNode = nextNode;
 	}
 	return locations;
-};
+}
 
-const getPoints = async (node1, node2) => {
+/**
+ * @param {MapNode} node1 The first MapNode
+ * @param {MapNode} node2 The second MapNode
+ *
+ * @returns {Array<Location>} A list of Locations from node1 to node2
+ */
+async function getPoints(node1, node2) {
 	let path = await Path.findOne({
 		nodeA: node1,
 		nodeB: node2,
@@ -95,29 +124,15 @@ const getPoints = async (node1, node2) => {
 	}
 	//console.log(path);
 	return points;
-};
+}
 
-mapRouter.route('/pathBetween').get(async (req, res) => {
-	let startNode = await MapNode.findOne({
-		'location.latitude': req.body.startLat,
-		'location.longitude': req.body.startLon,
-	});
-	if (startNode === null) {
-		startNode = await getClosestMapNode(req.body.startLat, req.body.startLon);
-	}
-	let endNode = await MapNode.findOne({
-		'location.latitude': req.body.endLat,
-		'location.longitude': req.body.endLon,
-	});
-	if (endNode === null) {
-		endNode = await getClosestMapNode(req.body.endLat, req.body.endLon);
-	}
-	const nodes = await getPathBetween(startNode, endNode);
-	//console.log(nodes);
-	res.json(nodes);
-});
-
-const alreadyHas = (node, map) => {
+/**
+ * @param {MapNode} node MapNode to check if its in a map
+ * @param {Map<MapNode, any>} map Map to check if MapNode is a key
+ *
+ * @returns {boolean} If map contains node as a key
+ */
+function alreadyHas(node, map) {
 	//console.log(node)
 	//console.log(set);
 	for (let n of map.keys()) {
@@ -129,9 +144,15 @@ const alreadyHas = (node, map) => {
 		}
 	}
 	return false;
-};
+}
 
-const getPathBetween = async (start, end) => {
+/**
+ * @param {MapNode} start MapNode that path should start at
+ * @param {MapNode} end Map Node that the path should end at
+ *
+ * @returns {Array<Location>} Array of locations leading from start to end (including start and end)
+ */
+async function getPathBetween(start, end) {
 	let gScore = new Map();
 	let fScore = new Map();
 	let cameFrom = new Map();
@@ -178,11 +199,34 @@ const getPathBetween = async (start, end) => {
 		}
 	}
 	return 'No Path Found';
-};
+}
 
 /**
  * ----------------- GET (return information about objects) ----------------
  */
+
+/**
+ * Get list of locations betweeen two specified coordinates
+ */
+mapRouter.route('/pathBetween').get(async (req, res) => {
+	let startNode = await MapNode.findOne({
+		'location.latitude': req.body.startLat,
+		'location.longitude': req.body.startLon,
+	});
+	if (startNode === null) {
+		startNode = await getClosestMapNode(req.body.startLat, req.body.startLon);
+	}
+	let endNode = await MapNode.findOne({
+		'location.latitude': req.body.endLat,
+		'location.longitude': req.body.endLon,
+	});
+	if (endNode === null) {
+		endNode = await getClosestMapNode(req.body.endLat, req.body.endLon);
+	}
+	const nodes = await getPathBetween(startNode, endNode);
+	//console.log(nodes);
+	res.json(nodes);
+});
 
 /**
  * Get all map nodes
