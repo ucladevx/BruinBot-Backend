@@ -30,7 +30,7 @@ mapRouter.route('/nodes').get(async (req, res) => {
  * @param {number} Longitude of specified location
  */
 mapRouter.route('/nodes/location').get(async (req, res) => {
-	const { latitude, longitude } = req.body;
+	const { latitude, longitude } = req.query;
 
 	if (!latitude || !longitude)
 		res.status(400).json('Latitude and/or longitude not provided.');
@@ -51,7 +51,6 @@ mapRouter.route('/nodes/location').get(async (req, res) => {
 			nodes[i].distance = distance;
 			nodes[i].eta = eta;
 		}
-		console.log(nodes);
 		res.json(nodes);
 	} catch (err) {
 		console.log('Error: ' + err);
