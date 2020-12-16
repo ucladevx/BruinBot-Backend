@@ -3,7 +3,7 @@ const express = require('express');
 const botsRouter = express.Router();
 
 let { BruinBot, InventoryArticle } = require('../models/bruinbot.model');
-let Map = require('../models/map.model');
+let { Path } = require('../models/map.model');
 let util = require('./utils');
 
 /**
@@ -11,17 +11,24 @@ let util = require('./utils');
  */
 
 /**
- * Return all BruinBot objects.
+ * Return a specific BruinBot by id
  */
-botsRouter.route('/').get((req, res) => {
-	BruinBot.find({}, function (err, bots) {
-		if (err) {
-			console.log('Error: ' + err);
-			res.status(404).json(err);
-		} else {
-			res.json(bots);
-		}
-	});
+botsRouter.route('/bot').get(async (req, res) => {
+	const botId = req.query.botId;
+	if (!botId)
+		return res.status(400).json(`'botId' not provided in request params`);
+
+	try {
+		let data = await BruinBot.findById(botId)
+			.populate({
+				path: 'inventory.item',
+				model: 'Item',
+			})
+			.populate('path');
+		res.json(data);
+	} catch (err) {
+		res.status(404).json(err);
+	}
 });
 
 /**
@@ -29,8 +36,8 @@ botsRouter.route('/').get((req, res) => {
  * to the coordinates in the request's body.
  */
 botsRouter.route('/closest').get((req, res) => {
-	const lat = req.body.latitude;
-	const lon = req.body.longitude;
+	const lat = req.query.latitude;
+	const lon = req.query.longitude;
 
 	if (!lat || !lon) {
 		return res
@@ -58,21 +65,46 @@ botsRouter.route('/closest').get((req, res) => {
 /**
  * Returns Location of the BruinBot with the provided id.
  */
-botsRouter.route('/location').get((req, res) => {
-	const id = req.body.id;
+botsRouter.route('/location').get(async (req, res) => {
+	const botId = req.query.botId;
 
-	if (!id) {
-		return res.status(400).json('Required id data not in request body.');
+	if (!botId) {
+		return res.status(400).json('Required botId not in request query.');
 	}
 
-	BruinBot.findById(id, function (err, bot) {
-		if (err) {
-			console.log('Error: ' + err);
-			res.status(400).json(err);
-		} else {
-			res.json(bot.location);
-		}
-	});
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		res.json(bot.location);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Returns current path of the BruinBot with the provided id.
+ */
+botsRouter.get('/path', async (req, res) => {
+	const botId = req.body.id;
+
+	if (!botId) res.status(400).json('Required bot id data not in request body.');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Bot with specified id does not exist.');
+		if (bot.path == null)
+			return res.status(409).json('Bot with specified id has null path.');
+		res.json(bot.path);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
@@ -94,13 +126,11 @@ botsRouter.route('/').post((req, res) => {
 			.json('Required name / lat / lon data not in request body.');
 	}
 
-	const newLocation = new Map.Location({
-		latitude: lat,
-		longitude: lon,
-	});
-
 	const newBot = new BruinBot({
-		location: newLocation,
+		location: {
+			latitude: lat,
+			longitude: lon,
+		},
 		status: 'Idle',
 		name: name,
 		inventory: [],
@@ -120,18 +150,25 @@ botsRouter.route('/').post((req, res) => {
 /**
  * Adds an existing item to an existing bot
  */
-botsRouter.route('/addItem').post((req, res) => {
+botsRouter.route('/addItem').post(async (req, res) => {
 	const botId = req.body.botId;
 	const itemId = req.body.itemId;
 	const quantity = req.body.quantity;
 
 	if (!botId || !itemId || !quantity) {
-		res
+		return res
 			.status(400)
-			.json('Required parameters itemId / quantity not in request body.');
+			.json(
+				'Required parameters botId / itemId / quantity not in request body.'
+			);
 	}
 
-	BruinBot.findById(botId).then((bot) => {
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
 		let isNewInventoryItem = true;
 
 		bot.inventory.forEach((article) => {
@@ -152,19 +189,15 @@ botsRouter.route('/addItem').post((req, res) => {
 			bot.inventory.push(newInventoryArticle);
 		}
 
-		bot
-			.save()
-			.then(() => {
-				console.log('Added items to bot inventory: ', bot);
-				res.json(
-					`Successfully added ${quantity} instances of item ${itemId} to bot ${botId}`
-				);
-			})
-			.catch((err) => {
-				console.log('Error: ' + err);
-				res.json(err);
-			});
-	});
+		await bot.save();
+		console.log('Added items to bot inventory: ', bot);
+		res.json(
+			`Successfully added ${quantity} instances of item ${itemId} to bot ${botId}`
+		);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
@@ -174,30 +207,92 @@ botsRouter.route('/addItem').post((req, res) => {
 /**
  * Update BruinBot object with specified id to have new location.
  */
-botsRouter.route('/updateLocation').put((req, res) => {
-	const id = req.body.id;
+botsRouter.route('/updateLocation').put(async (req, res) => {
+	const botId = req.body.botId;
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
 
-	if (!id || !lat || !lon) {
+	if (!botId || !lat || !lon) {
 		return res
 			.status(400)
-			.json('Required id / lat / lon data not in request body.');
+			.json('Required botId / lat / lon data not in request body.');
 	}
 
-	BruinBot.findByIdAndUpdate(
-		id,
-		{ 'location.latitude': lat, 'location.longitude': lon },
-		(err, result) => {
-			if (err) {
-				console.log('Error: ' + err);
-				res.status(400).json(err);
-			} else {
-				console.log(`Sucessfully updated location: ${result}`);
-				res.json(result);
-			}
-		}
-	);
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		bot.location.latitude = lat;
+		bot.location.longitude = lon;
+		await bot.save();
+		console.log(`Successfully updated location of bot ${botId}`);
+		res.json(`Successfully updated location of bot ${botId}`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Update BruinBot object with specified id to have new path from path object id.
+ *
+ * @param {string} botId id of the bot to be updated.
+ * @param {string} pathId id of the path to be added.
+ */
+botsRouter.put('/updatePath', async (req, res) => {
+	const botId = req.body.id;
+	const pathId = req.body.path;
+
+	if (!botId || !pathId)
+		res.status(400).json('Required bot id / path id data not in request body.');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+		let pathCount = await Path.countDocuments(pathId);
+
+		if (!bot)
+			return res.status(404).json('Bot with specified id does not exist.');
+		if (pathCount < 1)
+			return res.status(404).json('Path with specified id does not exist.');
+
+		bot.path = pathId;
+		await bot.save();
+		res.json(`Successfully added path with id ${pathId} to bot ${botId}.`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Update BruinBot object with specified id to have a null path.
+ *
+ * @param {string} botId id of the bot to be updated.
+ */
+botsRouter.put('/removePath', async (req, res) => {
+	const botId = req.body.id;
+
+	if (!botId) res.status(400).json('Required bot id data not in request body.');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Bot with specified id does not exist.');
+		if (bot.path == null)
+			return res
+				.status(409)
+				.json('Bot with specified id already has null path.');
+
+		bot.path = null;
+		await bot.save();
+		res.json(`Successfully removed path from bot ${botId}.`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 /**
@@ -207,22 +302,26 @@ botsRouter.route('/updateLocation').put((req, res) => {
 /**
  * Deletes BruinBot with the id provided in the request's body.
  */
-botsRouter.route('/').delete((req, res) => {
-	const id = req.body.id;
+botsRouter.route('/').delete(async (req, res) => {
+	const botId = req.body.botId;
 
-	if (!id) {
-		return res.status(400).json('Required id data not in request body.');
+	if (!botId) {
+		return res.status(400).json('Required botId data not in request body.');
 	}
 
-	BruinBot.findByIdAndDelete(id, (err, bot) => {
-		if (err) {
-			console.log('Error: ' + err);
-			res.status(400).json(err);
-		} else {
-			console.log(`Successfully deleted bot: ${bot}`);
-			res.json(`Deleted bot ${id}`);
-		}
-	});
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		await bot.deleteOne();
+		console.log(`Successfully deleted bot: ${bot}`);
+		res.json(`Deleted bot ${botId}`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
 });
 
 module.exports = botsRouter;

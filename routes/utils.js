@@ -1,3 +1,15 @@
+const AWS = require('aws-sdk');
+
+const s3 = new AWS.S3({
+	accessKeyId: process.env.S3_ACCESS_KEY_ID,
+	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
+});
+
+let Bucket = `${process.env.BUCKET}/item-images`;
+if (process.env.NODE_ENV === 'test') {
+	Bucket = `${process.env.BUCKET_TEST}/item-images`;
+}
+
 /**
  * Converts degrees to radians.
  *
@@ -10,7 +22,7 @@ function degToRad(degrees) {
 }
 
 /**
- * Returns the distance between two coordinates in kilometers.
+ * Returns the distance between two coordinates in meters.
  * Uses the haversine formula.
  *
  * @param {number} lat1 Latitude of the first coordinate
@@ -32,5 +44,44 @@ function coordDistanceM(lat1, lon1, lat2, lon2) {
 	return 2.0 * radiusM * Math.asin(x);
 }
 
-exports.degToRad = degToRad;
-exports.coordDistanceM = coordDistanceM;
+/**
+ * Uploads a image to S3 and returns the response data
+ *
+ * @param {file} file Image file to be uploaded
+ *
+ * @returns {object} S3 response data
+ */
+function uploadImageToS3(file) {
+	const { buffer, originalname, mimetype } = file;
+
+	const params = {
+		Bucket,
+		Key: originalname,
+		Body: buffer,
+		ContentType: mimetype,
+		ACL: 'public-read',
+	};
+
+	return s3.upload(params).promise();
+}
+
+/**
+ * Deletes an image from S3 and returns the response data
+ *
+ * @param {string} imgKey S3 image URL of image to be deleted
+ *
+ * @returns {object} S3 response data
+ */
+function deleteImageFromS3(imgKey) {
+	const params = {
+		Bucket,
+		Key: imgKey,
+	};
+
+	return s3.deleteObject(params).promise();
+}
+
+module.exports.degToRad = degToRad;
+module.exports.coordDistanceM = coordDistanceM;
+module.exports.uploadImageToS3 = uploadImageToS3;
+module.exports.deleteImageFromS3 = deleteImageFromS3;
