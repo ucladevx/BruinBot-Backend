@@ -3,7 +3,7 @@ let multer = require('multer');
 
 let { Item } = require('../models/item.model');
 let { Event } = require('../models/event.model');
-let { uploadImageToS3, deleteImageFromS3 } = require('./utils.js');
+let { uploadImageToS3, deleteImageFromS3 } = require('../util/aws');
 
 const router = express.Router();
 const storage = multer.memoryStorage();

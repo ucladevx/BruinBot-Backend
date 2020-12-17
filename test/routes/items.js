@@ -2,13 +2,13 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const assert = require('assert');
-let app = require('../app.js');
+let app = require('../../app');
 const fs = require('fs');
 
-let { Item } = require('../models/item.model.js');
-let { Event } = require('../models/event.model.js');
-let { createAndSaveEvent, createAndSaveItem } = require('./utils.js');
-let { deleteImageFromS3 } = require('../routes/utils.js');
+let { Item } = require('../../models/item.model');
+let { Event } = require('../../models/event.model');
+let { createAndSaveEvent, createAndSaveItem } = require('./utils');
+let { deleteImageFromS3 } = require('../../util/aws');
 
 const testPort = 8888;
 chai.use(chaiHttp);
@@ -37,7 +37,7 @@ before((done) => {
 	});
 });
 
-describe('Item', () => {
+describe('Item routes', () => {
 	suppressLogs();
 
 	// Clean up after each test
