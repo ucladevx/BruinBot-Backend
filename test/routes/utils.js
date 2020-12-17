@@ -1,8 +1,8 @@
-let { BruinBot } = require('../models/bruinbot.model');
-let { Event } = require('../models/event.model');
-let { Item } = require('../models/item.model');
+let { BruinBot } = require('../../models/bruinbot.model');
+let { Event } = require('../../models/event.model');
+let { Item } = require('../../models/item.model');
 
-let { uploadImageToS3 } = require('../routes/utils.js');
+let { uploadImageToS3 } = require('../../util/aws');
 const fs = require('fs');
 
 /**

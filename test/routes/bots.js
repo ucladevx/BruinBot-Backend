@@ -2,10 +2,10 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const assert = require('assert');
-let app = require('../app.js');
+let app = require('../../app');
 
-let { BruinBot } = require('../models/bruinbot.model.js');
-let { createAndSaveBot } = require('./utils.js');
+let { BruinBot } = require('../../models/bruinbot.model');
+let { createAndSaveBot } = require('./utils');
 
 const testPort = 8888;
 chai.use(chaiHttp);
@@ -35,7 +35,7 @@ before((done) => {
 	});
 });
 
-describe('Bot', () => {
+describe('Bot routes', () => {
 	suppressLogs();
 
 	// Clean up after each test

@@ -8,8 +8,13 @@
     "lint:fix": "eslint . --fix --ext .js",
     "dev": "export NODE_ENV=dev && npx nodemon server.js",
     "dev:win": "set NODE_ENV=dev && npx nodemon server.js",
-    "test": "export NODE_ENV=test && mocha test/bots.js --timeout 5000 --exit && mocha test/items.js --timeout 5000 --exit",
-    "test:win": "set NODE_ENV=test && mocha test/bots.js --timeout 5000 --exit && mocha test/items.js --timeout 5000 --exit",
+
+    "test:bots": "mocha test/routes/bots.js --exit",
+    "test:items": "mocha test/routes/items.js --timeout 5000 --exit",
+    "test:pathfinding": "mocha test/util/pathfinding.js --timeout 5000 --exit",
+
+    "test": "export NODE_ENV=test && npm run test:bots && npm run test:items && npm run test:pathfinding",
+    "test:win": "set NODE_ENV=test && npm run test:bots && npm run test:items && npm run test:pathfinding",
     "test:coverage": "nyc --reporter=text npm run test",
     "test:coverage:win": "nyc --reporter=text npm run test:win"
   },

@@ -1,6 +1,7 @@
 {
   "include": [
-    "routes/*.js"
+    "routes/*.js",
+    "util/*.js"
   ],
   "watermarks": {
     "lines": [60, 80],
