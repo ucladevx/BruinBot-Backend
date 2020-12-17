@@ -5,9 +5,11 @@ const router = express.Router();
 let { User } = require('../models/user.model');
 let admin = require('firebase-admin');
 
+let jsonKey = process.env.FIREBASE_KEY;
+
 admin.initializeApp({
-	credential: admin.credential.applicationDefault(),
-	databaseURL: 'https://bruinbot-8d68e.firebaseio.com',
+	credential: admin.credential.cert(JSON.parse(jsonKey)),
+	databaseURL: process.env.FIREBASE_URL,
 });
 
 router.route('/').get((req, res) => {
