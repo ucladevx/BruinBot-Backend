@@ -3,9 +3,39 @@ const express = require('express');
 const mapRouter = express.Router();
 
 const { MapNode, Path } = require('../models/map.model');
+const { botSpeed } = require('../constants');
+const { coordDistanceM } = require('../util/utils');
+const { getClosestMapNode, getPathBetween } = require('../util/pathfinding');
 
 /**
- * Get all map nodes.
+ * ----------------- GET (return information about objects) ----------------
+ */
+
+/**
+ * Get list of locations betweeen two specified coordinates
+ */
+mapRouter.route('/pathBetween').get(async (req, res) => {
+	let startNode = await MapNode.findOne({
+		'location.latitude': req.body.startLat,
+		'location.longitude': req.body.startLon,
+	});
+	if (startNode === null) {
+		startNode = await getClosestMapNode(req.body.startLat, req.body.startLon);
+	}
+	let endNode = await MapNode.findOne({
+		'location.latitude': req.body.endLat,
+		'location.longitude': req.body.endLon,
+	});
+	if (endNode === null) {
+		endNode = await getClosestMapNode(req.body.endLat, req.body.endLon);
+	}
+	const nodes = await getPathBetween(startNode, endNode);
+	//console.log(nodes);
+	res.json(nodes);
+});
+
+/**
+ * Get all map nodes
  */
 mapRouter.route('/nodes').get(async (req, res) => {
 	try {
@@ -18,10 +48,59 @@ mapRouter.route('/nodes').get(async (req, res) => {
 });
 
 /**
- * Create path from array of coords.
+ * Get all map nodes along with distance (m) and eta (minutes) to specified location
+ *
+ * @param {number} Latitude of specified location
+ * @param {number} Longitude of specified location
+ */
+mapRouter.route('/nodes/location').get(async (req, res) => {
+	const { latitude, longitude } = req.query;
+
+	if (!latitude || !longitude)
+		res.status(400).json('Latitude and/or longitude not provided.');
+
+	try {
+		let nodes = await MapNode.find();
+		nodes = JSON.parse(JSON.stringify(nodes));
+
+		for (let i = 0; i < nodes.length; i++) {
+			let distance = coordDistanceM(
+				nodes[i].location.latitude,
+				nodes[i].location.longitude,
+				latitude,
+				longitude
+			);
+
+			let eta = distance / botSpeed / 60;
+			nodes[i].distance = distance;
+			nodes[i].eta = eta;
+		}
+		res.json(nodes);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * ------------------------- POST (add new objects) -------------------------
+ */
+
+/**
+ * Create path from array of coords. The first and last coordinates in the array
+ * are terminal nodes. If either terminal node does not already exist (have the
+ * exact same coordinates), then that node is created and persisted, along with
+ * the name of the node, if given. Note that this path is meant to be
+ * bi-directional - do not get confused by the naming of start and end.
+ *
+ * @param {Array<Array<number>>} path List of coordinates in path
+ * @param {string=} start Name of first node (optional)
+ * @param {string=} end Name of end node (optional)
  */
 mapRouter.route('/').post(async (req, res) => {
 	const path = req.body.path;
+	const start = req.body.start;
+	const end = req.body.end;
 
 	if (!path || !Array.isArray(path) || path.length < 2) {
 		return res.status(400).json({
@@ -42,15 +121,38 @@ mapRouter.route('/').post(async (req, res) => {
 		}
 
 		if (i === 0 || i === path.length - 1) {
-			// If a map node already exists for a location,
-			// use it instead of creating a new one.
+			/**
+			 * If a map node already exists for a location, use it instead of
+			 * creating a new one.
+			 */
 			const existingNode = await MapNode.findOne({
 				'location.latitude': lat,
 				'location.longitude': lon,
 			});
-			endPoints.push(
-				existingNode || new MapNode({ latitude: lat, longitude: lon })
-			);
+
+			if (i == 0) {
+				let newMapNode = start
+					? new MapNode({
+							name: start,
+							location: { latitude: lat, longitude: lon },
+					  })
+					: new MapNode({
+							location: { latitude: lat, longitude: lon },
+					  });
+
+				endPoints.push(existingNode || newMapNode);
+			} else {
+				let newMapNode = end
+					? new MapNode({
+							name: end,
+							location: { latitude: lat, longitude: lon },
+					  })
+					: new MapNode({
+							location: { latitude: lat, longitude: lon },
+					  });
+
+				endPoints.push(existingNode || newMapNode);
+			}
 		} else {
 			points.push({ latitude: lat, longitude: lon });
 		}
@@ -63,7 +165,7 @@ mapRouter.route('/').post(async (req, res) => {
 	});
 
 	try {
-		// save new map nodes and path
+		// Save new map nodes and path
 		await endPoints[0].save();
 		await endPoints[1].save();
 		const savedPath = await newPath.save();
@@ -75,20 +177,29 @@ mapRouter.route('/').post(async (req, res) => {
 });
 
 /**
+ * ------------------------- DELETE (remove objects) ------------------------
+ */
+
+/**
  * Delete path by id, while keeping terminal map nodes.
  */
 mapRouter.route('/').delete(async (req, res) => {
-	const id = req.body.id;
+	const pathId = req.body.pathId;
 
-	if (!id) {
+	if (!pathId) {
 		return res.status(400).json({
-			error: 'Required id data not in request body.',
+			error: 'Required pathId data not in request body.',
 		});
 	}
 
 	try {
-		const deletedPath = await Path.findByIdAndDelete(id);
-		res.json(deletedPath);
+		let path = await Path.findById(pathId);
+
+		if (!path)
+			return res.status(404).json('Could not find path specified by pathId.');
+
+		await path.deleteOne();
+		res.json(`Successfully deleted path ${pathId}`);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
@@ -99,21 +210,28 @@ mapRouter.route('/').delete(async (req, res) => {
  * Delete map node and all of its paths by id.
  */
 mapRouter.route('/nodes').delete(async (req, res) => {
-	const id = req.body.id;
+	const pathId = req.body.pathId;
 
-	if (!id) {
+	if (!pathId) {
 		return res.status(400).json({
-			error: 'Required id data not in request body.',
+			error: 'Required pathId data not in request body.',
 		});
 	}
 
 	try {
 		// delete node and any of its paths
-		const deletedNode = await MapNode.findByIdAndDelete(id);
-		const pathsStarting = await Path.deleteMany({ nodeA: deletedNode });
-		const pathsEnding = await Path.deleteMany({ nodeB: deletedNode });
+		let node = await MapNode.findById(pathId);
 
-		res.json({ node: deletedNode, numPaths: pathsStarting.n + pathsEnding.n });
+		if (!node)
+			return res
+				.status(404)
+				.json('Could not find map node specified by pathId.');
+
+		await node.deleteOne();
+		const pathsStarting = await Path.deleteMany({ nodeA: node });
+		const pathsEnding = await Path.deleteMany({ nodeB: node });
+
+		res.json({ node: node, numPaths: pathsStarting.n + pathsEnding.n });
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);

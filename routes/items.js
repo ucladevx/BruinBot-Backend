@@ -3,7 +3,7 @@ let multer = require('multer');
 
 let { Item } = require('../models/item.model');
 let { Event } = require('../models/event.model');
-let { uploadImageToS3, deleteImageFromS3 } = require('./utils.js');
+let { uploadImageToS3, deleteImageFromS3 } = require('../util/aws');
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -66,9 +66,9 @@ router.route('/weight').put(async (req, res) => {
 	const { itemId, weight } = req.body;
 
 	if (!itemId || !weight)
-		res
+		return res
 			.status(400)
-			.json("Required itemId and/or weight not provided in request's body.");
+			.json("Required itemId / weight not provided in request's body.");
 
 	try {
 		let item = await Item.findById(itemId);
@@ -99,7 +99,9 @@ router.delete('/', async (req, res) => {
 	const { itemId, eventId } = req.query;
 
 	if (!itemId || !eventId)
-		res.status(400).json('Required itemId not provided in requet body.');
+		return res
+			.status(400)
+			.json('Required itemId / eventId not provided in request body.');
 
 	try {
 		let event = await Event.findById(eventId);
@@ -110,7 +112,7 @@ router.delete('/', async (req, res) => {
 		if (!item)
 			return res.status(404).json('Could not find item specified by itemId.');
 
-		item.deleteOne();
+		await item.deleteOne();
 		event.items.pull(itemId);
 		await event.save();
 

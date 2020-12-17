@@ -2,10 +2,10 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const assert = require('assert');
-let app = require('../app.js');
+let app = require('../../app');
 
-let { BruinBot } = require('../models/bruinbot.model.js');
-let { createAndSaveBot } = require('./utils.js');
+let { BruinBot } = require('../../models/bruinbot.model');
+let { createAndSaveBot } = require('./utils');
 
 const testPort = 8888;
 chai.use(chaiHttp);
@@ -35,28 +35,12 @@ before((done) => {
 	});
 });
 
-describe('Bot', () => {
+describe('Bot routes', () => {
 	suppressLogs();
 
 	// Clean up after each test
 	afterEach(async () => {
 		await BruinBot.deleteMany({});
-	});
-
-	describe('get /bots', () => {
-		it('Should return list of all BruinBots', async () => {
-			await createAndSaveBot(exampleBotA);
-			await createAndSaveBot(exampleBotB);
-
-			return await chai
-				.request(app)
-				.get('/bots')
-				.then((res) => {
-					assert.strictEqual(res.status, 200);
-					assert.ok(Array.isArray(res.body));
-					assert.strictEqual(res.body.length, 2);
-				});
-		});
 	});
 
 	describe('get /bots/bot', () => {
@@ -152,7 +136,7 @@ describe('Bot', () => {
 				.request(app)
 				.delete('/bots')
 				.send({
-					id: savedBot._id,
+					botId: savedBot._id,
 				})
 				.then(async (res) => {
 					assert.strictEqual(res.status, 200);
@@ -166,7 +150,7 @@ describe('Bot', () => {
 				.request(app)
 				.delete('/bots')
 				.send({
-					id: 'clearlyWrongId',
+					botId: 'clearlyWrongId',
 				})
 				.then(async (res) => {
 					assert.notStrictEqual(res.status, 200);
