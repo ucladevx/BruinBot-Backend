@@ -5,34 +5,10 @@ const mapRouter = express.Router();
 const { MapNode, Path } = require('../models/map.model');
 const { botSpeed } = require('../constants');
 const { coordDistanceM } = require('../util/utils');
-const { getClosestMapNode, getPathBetween } = require('../util/pathfinding');
 
 /**
  * ----------------- GET (return information about objects) ----------------
  */
-
-/**
- * Get list of locations betweeen two specified coordinates
- */
-mapRouter.route('/pathBetween').get(async (req, res) => {
-	let startNode = await MapNode.findOne({
-		'location.latitude': req.body.startLat,
-		'location.longitude': req.body.startLon,
-	});
-	if (startNode === null) {
-		startNode = await getClosestMapNode(req.body.startLat, req.body.startLon);
-	}
-	let endNode = await MapNode.findOne({
-		'location.latitude': req.body.endLat,
-		'location.longitude': req.body.endLon,
-	});
-	if (endNode === null) {
-		endNode = await getClosestMapNode(req.body.endLat, req.body.endLon);
-	}
-	const nodes = await getPathBetween(startNode, endNode);
-	//console.log(nodes);
-	res.json(nodes);
-});
 
 /**
  * Get all map nodes

@@ -9,8 +9,8 @@ app = Flask(__name__)
 random.seed(time.time())
 UPDATE_INTERVAL = 5
 
-BASE_URL = 'http://localhost:8080'
-EVENT_ID = '5fd80707f3df17df0d703a5d'
+BASE_URL = 'http://bruinbot-load-balancer-1177858409.us-west-1.elb.amazonaws.com'
+EVENT_ID = '5fc90164d5869f00143e7fac'
 
 # Shared memory between processes
 # https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes

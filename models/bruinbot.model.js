@@ -28,9 +28,7 @@ const bruinBotSchema = new schema({
 		default: 'Idle',
 	},
 	path: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Path',
-		default: null,
+		type: [map.Location.schema],
 	},
 	name: {
 		type: String,
