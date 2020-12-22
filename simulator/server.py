@@ -57,7 +57,7 @@ def main_loop(loop, latitude, longitude):
 
             for bot in bots:
                 if bot["path"]:
-                    bot_path = bot["path"]["points"]
+                    bot_path = bot["path"]
                     next_point = bot_path[bot["path_index"]]
 
                     location_payload = {
