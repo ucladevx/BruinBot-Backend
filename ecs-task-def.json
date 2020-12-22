@@ -62,7 +62,7 @@
     }
   ],
   "placementConstraints": [],
-  "memory": "512",
+  "memory": "256",
   "taskRoleArn": "arn:aws:iam::474608071686:role/ecsTaskExecutionRole",
   "family": "node-server-task",
   "pidMode": null,
@@ -70,7 +70,7 @@
     "FARGATE"
   ],
   "networkMode": "awsvpc",
-  "cpu": "256",
+  "cpu": "64",
   "inferenceAccelerators": null,
   "proxyConfiguration": null,
   "volumes": []
