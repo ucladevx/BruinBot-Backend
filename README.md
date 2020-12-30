@@ -1,29 +1,31 @@
 # BruinBot-Backend
 Our backend stack consists of Express + Mongoose. Refer to our [notion page](https://www.notion.so/uclabruinbot/Backend-dcd2a56527e34f87a697e8b54c52ce96) for more details. Our frontend repo can be found [here](https://github.com/ucladevx/BruinBot-Frontend).
 
-### Set up instructions:
+### Set up instructions for development:
+Install MongoDB Community Edition if you have not already: https://docs.mongodb.com/manual/administration/install-community/
+
 Install node dependencies
 ```
 npm ci
 ```
 
-Create .env file in root directory with the following enviornment variables:
+Start the database
 ```
-ATLAS_URI_TEST=<Your Atlas test URI>
+mongod --config /usr/local/etc/mongod.conf
 ```
 
-Start the server
+Start the server (make sure you have the `.env` file)
 ```
 npm run dev
 ```
 
-Make sure your code passes the style linter! Check for mistakes and fix some of them automatically:
+Make sure your code passes the style linter - check for mistakes and fix some of them automatically
 ```
 npm run lint
 npm run lint:fix
 ```
 
-Run Mocha tests
+Run tests
 ```
 npm test
 ```

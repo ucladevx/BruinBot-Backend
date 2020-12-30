@@ -4,10 +4,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "npx nodemon server.js",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --fix --ext .js",
-    "dev": "export NODE_ENV=dev && npx nodemon server.js",
-    "dev:win": "set NODE_ENV=dev && npx nodemon server.js",
 
     "test:bots": "mocha test/routes/bots.js --exit",
     "test:items": "mocha test/routes/items.js --timeout 5000 --exit",

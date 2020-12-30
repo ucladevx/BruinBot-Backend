@@ -1,13 +1,25 @@
 const AWS = require('aws-sdk');
+const os = require('os');
 
 const s3 = new AWS.S3({
 	accessKeyId: process.env.S3_ACCESS_KEY_ID,
 	secretAccessKey: process.env.S3_ACCESS_KEY_SECRET,
 });
 
-let Bucket = `${process.env.BUCKET}/item-images`;
-if (process.env.NODE_ENV === 'test') {
-	Bucket = `${process.env.BUCKET_TEST}/item-images`;
+let Bucket = '';
+switch (process.env.NODE_ENV) {
+	case 'test':
+		Bucket = 'bruinbot-test/item-images';
+		break;
+	case 'staging':
+		Bucket = 'bruinbot-stage/item-images';
+		break;
+	case 'production':
+		Bucket = 'bruinbot-prod/item-images';
+		break;
+	case 'development':
+	default:
+		Bucket = `bruinbot-dev/${os.userInfo().username}/item-images`;
 }
 
 /**

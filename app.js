@@ -14,11 +14,22 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// There exists a separate database for testing
 let uri = process.env.ATLAS_URI;
-if (process.env.NODE_ENV === 'test') {
-	console.log('Testing...');
-	uri = process.env.ATLAS_URI_TEST;
+console.log('NODE_ENV=', process.env.NODE_ENV);
+switch (process.env.NODE_ENV) {
+	case 'test':
+		console.log('Testing...');
+		uri = uri.replace('<DB_NAME>', 'bruinbot-test');
+		break;
+	case 'staging':
+		uri = uri.replace('<DB_NAME>', 'bruinbot-stage');
+		break;
+	case 'production':
+		uri = uri.replace('<DB_NAME>', 'bruinbot-prod');
+		break;
+	case 'development':
+	default:
+		uri = 'mongodb://localhost:27017/bruinbot-dev';
 }
 
 mongoose.connect(uri, {
