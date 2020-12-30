@@ -50,7 +50,7 @@ router.route('/add').post(async (req, res) => {
 		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
 		uid = decodedToken.uid;
 	} catch (err) {
-		console.log('Error ' + err);
+		console.log('Error: ' + err);
 		res.status(400).json(err);
 		return;
 	}
