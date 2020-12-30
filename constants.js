@@ -1,6 +1,7 @@
 module.exports = {
-	/**
-	 * Hardware constants
-	 */
-	botSpeed: 0.5, // In m/s
+	// App constants
+	PORT: 8080,
+
+	// Hardware constants
+	BOT_SPEED: 0.5, // In m/s
 };
