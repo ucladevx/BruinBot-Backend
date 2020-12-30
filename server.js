@@ -1,6 +1,7 @@
-const app = require('./app.js');
+const app = require('./app');
+const { PORT } = require('./constants');
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || PORT;
 const host = process.env.HOST || '0.0.0.0';
 
 app.on('Mongoose ready', () => {

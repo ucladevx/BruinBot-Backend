@@ -3,7 +3,7 @@ const express = require('express');
 const mapRouter = express.Router();
 
 const { MapNode, Path } = require('../models/map.model');
-const { botSpeed } = require('../constants');
+const { BOT_SPEED } = require('../constants');
 const { coordDistanceM } = require('../util/utils');
 
 /**
@@ -47,7 +47,7 @@ mapRouter.route('/nodes/location').get(async (req, res) => {
 				longitude
 			);
 
-			let eta = distance / botSpeed / 60;
+			let eta = distance / BOT_SPEED / 60;
 			nodes[i].distance = distance;
 			nodes[i].eta = eta;
 		}
