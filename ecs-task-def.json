@@ -6,7 +6,7 @@
       "dnsSearchDomains": null,
       "environmentFiles": [
         {
-          "value": "arn:aws:s3:::bruinbot-env/prod.env",
+          "value": "arn:aws:s3:::bruinbot-prod/prod.env",
           "type": "s3"
         }
       ],
