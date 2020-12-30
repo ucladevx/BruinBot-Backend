@@ -28,8 +28,10 @@ Install Python modules (equivalent of running `npm ci`)
 pip install -r requirements.txt
 ```
 
-Run Flask server
+Ways to run simulator (see `python server.py -h` for more options)
 
 ```
-python server.py
+python server.py --event randomeventid123abc
+python server.py --event randomeventid123abc --prod
+python server.py --event randomeventid123abc --interval 20
 ```

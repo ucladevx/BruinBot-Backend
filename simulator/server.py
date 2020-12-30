@@ -1,39 +1,35 @@
-from flask import Flask
-import requests
-from multiprocessing import Value, Process
-import time
+import argparse
 import random
+import requests
+import time
+from flask import Flask
+from multiprocessing import Value, Process
 
 app = Flask(__name__)
-
 random.seed(time.time())
-UPDATE_INTERVAL = 5
-
-BASE_URL = 'http://bruinbot-load-balancer-1177858409.us-west-1.elb.amazonaws.com'
-EVENT_ID = '5fc90164d5869f00143e7fac'
 
 # Shared memory between processes
 # https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
-loop = Value('b', True)
-latitude = Value('d', 0)
-longitude = Value('d', 0)
+loop = Value("b", True)
+latitude = Value("d", 0)
+longitude = Value("d", 0)
 
 @app.before_first_request
 def initial():
     return
 
-@app.route('/')
+@app.route("/")
 def display_bot_status():
     return str(latitude.value) + ", " + str(longitude.value)
 
-def main_loop(loop, latitude, longitude):
-    """The main loop for the robot's internal processing."""
+def main_loop(loop, latitude, longitude, baseUrl, eventId, updateInterval):
+    """The main loop for the robot"s internal processing."""
     event_bots_query = {
-        "eventId": EVENT_ID
+        "eventId": eventId
     }
 
     bots = requests.get(
-        BASE_URL + "/events/bots",
+        baseUrl + "/events/bots",
         params=event_bots_query
     ).json()
 
@@ -52,7 +48,7 @@ def main_loop(loop, latitude, longitude):
             return
 
         # Update every UPDATE_INTERVAL seconds
-        if time.time() - prev_time >= 10:
+        if time.time() - prev_time >= updateInterval:
             prev_time = int(time.time())
 
             for bot in bots:
@@ -67,7 +63,7 @@ def main_loop(loop, latitude, longitude):
                     }
 
                     res = requests.put(
-                        BASE_URL + "/bots/updateLocation",
+                        baseUrl + "/bots/updateLocation",
                         data=location_payload
                     )
 
@@ -85,9 +81,28 @@ def main_loop(loop, latitude, longitude):
         time.sleep(1)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Simulate BruinBots by firing periodic requests.")
+    parser.add_argument("--prod", action="store_true", 
+        help="If flag specified, run simulator on prod server, otherwise run on local server")
+    parser.add_argument("--event", metavar="eventId", required=True, 
+        help="Event ID of event whose bots will be simulated")
+    parser.add_argument("--interval", metavar="updateInterval", type=int, default=10,
+        help="Interval at which simulator fires requests (default 10s)")
+
+    args = parser.parse_args()
+    eventId = args.event
+    updateInterval = args.interval
+    baseUrl = ""
+    # Don't include the trailing slash in the baseUrl
+    if args.prod:
+        # Load balancer is currently offline, when it is rebooted this will need to be updated
+        baseUrl = "http://bruinbot-load-balancer-1177858409.us-west-1.elb.amazonaws.com/"
+    else:
+        baseUrl = "http://localhost:8080"
+
     # Create and start process that hosts the onboard continuous loop
     operation_process = Process(
-        target=main_loop, args=(loop, latitude, longitude))
+        target=main_loop, args=(loop, latitude, longitude, baseUrl, eventId, updateInterval))
     operation_process.start()
 
     # Run the Flask server
