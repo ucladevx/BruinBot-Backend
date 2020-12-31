@@ -3,12 +3,25 @@ const express = require('express');
 const mapRouter = express.Router();
 
 const { MapNode, Path } = require('../models/map.model');
-const { BOT_SPEED } = require('../constants');
+const { BOT_SPEED, VICINITY } = require('../constants');
 const { coordDistanceM } = require('../util/utils');
 
 /**
  * ----------------- GET (return information about objects) ----------------
  */
+
+/**
+ * Get all paths
+ */
+mapRouter.route('/').get(async (req, res) => {
+	try {
+		const paths = await Path.find().populate('nodeA').populate('nodeB');
+		res.json(paths);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
 
 /**
  * Get all map nodes
@@ -96,15 +109,26 @@ mapRouter.route('/').post(async (req, res) => {
 			return res.status(400).json({ error: 'Malformatted path coordinates.' });
 		}
 
+		const mapNodes = await MapNode.find();
+
 		if (i === 0 || i === path.length - 1) {
 			/**
 			 * If a map node already exists for a location, use it instead of
 			 * creating a new one.
 			 */
-			const existingNode = await MapNode.findOne({
-				'location.latitude': lat,
-				'location.longitude': lon,
-			});
+			let existingNode = null;
+			for (let j = 0; j < mapNodes.length; j++) {
+				if (
+					coordDistanceM(
+						mapNodes[j].location.latitude,
+						mapNodes[j].location.longitude,
+						lat,
+						lon
+					) < VICINITY
+				) {
+					existingNode = mapNodes[j];
+				}
+			}
 
 			if (i == 0) {
 				let newMapNode = start

@@ -5,7 +5,8 @@ const botsRouter = express.Router();
 let { BruinBot, InventoryArticle } = require('../models/bruinbot.model');
 let { MapNode } = require('../models/map.model');
 let PathFinding = require('../util/pathfinding');
-let util = require('../util/utils');
+let { coordDistanceM } = require('../util/utils');
+let { VICINITY } = require('../constants');
 
 /**
  * ----------------- GET (return information about objects) ----------------
@@ -177,6 +178,12 @@ botsRouter.route('/addItem').post(async (req, res) => {
 	}
 });
 
+/**
+ * Finds a path from the bot's current location to a target node. The first segment
+ * of the path is a straight line path from the current location to the nearest node,
+ * and the rest is found using A* search. If the bot is already in transit, deny the
+ * the request.
+ */
 botsRouter.route('/toNode').post(async (req, res) => {
 	const { botId, nodeId } = req.body;
 
@@ -187,6 +194,14 @@ botsRouter.route('/toNode').post(async (req, res) => {
 		let bot = await BruinBot.findById(botId);
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
+
+		if (bot.status != 'Idle') {
+			return res
+				.status(400)
+				.json(
+					`${bot.name} is already on a path. Please wait the path to be completed first.`
+				);
+		}
 
 		let endNode = await MapNode.findById(nodeId);
 		if (!endNode)
@@ -199,8 +214,10 @@ botsRouter.route('/toNode').post(async (req, res) => {
 			bot.location.longitude
 		);
 		let nodes = await PathFinding.getPathBetween(startNode, endNode);
+		nodes.unshift(bot.location); // straight line from current location to nearest start node
 
 		bot.path = nodes;
+		bot.status = 'InTransit';
 		await bot.save();
 
 		res.json(nodes);
@@ -236,6 +253,17 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 
 		bot.location.latitude = lat;
 		bot.location.longitude = lon;
+
+		if (bot.status == 'InTransit') {
+			let pathEnd = bot.path[bot.path.length - 1];
+			if (
+				coordDistanceM(lat, lon, pathEnd.latitude, pathEnd.longitude) < VICINITY
+			) {
+				bot.path = [];
+				bot.status = 'Idle';
+			}
+		}
+
 		await bot.save();
 		console.log(`Successfully updated location of bot ${botId}`);
 		res.json(`Successfully updated location of bot ${botId}`);
@@ -301,7 +329,7 @@ function findBotCoords(bots, lat, lon) {
 
 	// For all bots, first find their distance from the provided coordinates
 	for (var b of bots) {
-		currentDistance = util.coordDistanceM(
+		currentDistance = coordDistanceM(
 			lat,
 			lon,
 			b.location.latitude,
