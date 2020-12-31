@@ -24,25 +24,10 @@ def display_bot_status():
 
 def main_loop(loop, latitude, longitude, baseUrl, eventId, updateInterval):
     """The main loop for the robot"s internal processing."""
-    event_bots_query = {
-        "eventId": eventId
-    }
-
-    bots = requests.get(
-        baseUrl + "/events/bots",
-        params=event_bots_query
-    ).json()
-
-    if not bots:
-        print("Error retrieving Buinbots.")
-        exit()
-
-    # Keep track of which point in the path the bot is on
-    for bot in bots:
-        bot["path_index"] = 0
-        print(f'{bot["name"]}: {bot["path"]}\n')
 
     prev_time = time.time()
+    pathProgresses = {}
+
     while True:
         if loop.value != True:
             return
@@ -51,10 +36,31 @@ def main_loop(loop, latitude, longitude, baseUrl, eventId, updateInterval):
         if time.time() - prev_time >= updateInterval:
             prev_time = int(time.time())
 
+            bots = requests.get(
+                baseUrl + "/events/bots",
+                params={
+                    "eventId": eventId
+                }
+            ).json()
+
+            if not bots:
+                print("Error retrieving Buinbots.")
+                exit()
+
+            # Keep track of which point in the path the bot is on
             for bot in bots:
-                if bot["path"]:
+                if bot["_id"] not in pathProgresses and bot["status"] == "InTransit":
+                    pathProgresses["_id"] = 0
+
+            for bot in bots:
+                if bot["status"] == "InTransit":
+                    if bot["_id"] not in pathProgresses:
+                        pathProgresses[bot["_id"]] = 0
+                    
                     bot_path = bot["path"]
-                    next_point = bot_path[bot["path_index"]]
+                    next_point = bot_path[pathProgresses[bot["_id"]]]
+
+                    print(f'{bot["name"]} is now on ({next_point["latitude"]}, {next_point["longitude"]}), {pathProgresses[bot["_id"]] + 1}/{len(bot_path)} of path in progress')
 
                     location_payload = {
                         "latitude": str(next_point["latitude"]),
@@ -67,16 +73,13 @@ def main_loop(loop, latitude, longitude, baseUrl, eventId, updateInterval):
                         data=location_payload
                     )
 
-                    # Teleport bot back to beginning of path to re-run the route
-                    bot["path_index"] = (bot["path_index"] + 1) % len(bot_path)
-
-                    if res:
-                        print(f'{bot["name"]} is now on ({next_point["latitude"]}, {next_point["longitude"]}), {bot["path_index"]}/{len(bot_path)} of path completed')
-                    else:
+                    if not res:
                         print(f'ERROR: {bot["name"]} failed to update location.')
 
-                    if (bot["path_index"] == 0):
-                        print("Resetting " + bot["name"] + " back to start of path...")
+                    pathProgresses[bot["_id"]] += 1
+                    if pathProgresses[bot["_id"]] == len(bot_path):
+                        del pathProgresses[bot["_id"]]
+                        print(f'{bot["name"]} has finished its path and has arrived at its destination!')
 
         time.sleep(1)
 
