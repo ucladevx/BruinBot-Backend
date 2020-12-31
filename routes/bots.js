@@ -329,7 +329,7 @@ function findBotCoords(bots, lat, lon) {
 
 	// For all bots, first find their distance from the provided coordinates
 	for (var b of bots) {
-		currentDistance = util.coordDistanceM(
+		currentDistance = coordDistanceM(
 			lat,
 			lon,
 			b.location.latitude,
