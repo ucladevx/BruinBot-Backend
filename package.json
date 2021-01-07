@@ -7,11 +7,9 @@
     "dev": "npx nodemon server.js",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --fix --ext .js",
-
     "test:bots": "mocha test/routes/bots.js --exit",
     "test:items": "mocha test/routes/items.js --timeout 5000 --exit",
     "test:pathfinding": "mocha test/util/pathfinding.js --timeout 5000 --exit",
-
     "test": "export NODE_ENV=test && npm run test:bots && npm run test:items && npm run test:pathfinding",
     "test:win": "set NODE_ENV=test && npm run test:bots && npm run test:items && npm run test:pathfinding",
     "test:coverage": "nyc --reporter=text npm run test",
@@ -27,6 +25,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "firebase-admin": "^9.4.1",
+    "migrate-mongoose": "^4.0.0",
     "mongoose": "^5.8.3",
     "multer": "^1.4.2",
     "multer-gridfs-storage": "^4.2.0",
