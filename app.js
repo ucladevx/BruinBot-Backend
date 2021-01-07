@@ -60,4 +60,5 @@ app.use('/items', itemsRouter);
 app.use('/events', eventsRouter);
 app.use('/paths', pathsRouter);
 
-module.exports = app;
+module.exports.app = app;
+module.exports.db = uri;

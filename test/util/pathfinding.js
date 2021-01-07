@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const { assert } = require('chai');
-let app = require('../../app');
+let { app } = require('../../app');
 
 const { MapNode, Path } = require('../../models/map.model');
 const pathFinding = require('../../util/pathfinding');
