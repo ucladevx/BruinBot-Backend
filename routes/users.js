@@ -31,23 +31,23 @@ router.route('/').get((req, res) => {
  */
 
 /**
- * Adds a new User object with the username and firebase_id_token provided in the
+ * Adds a new User object with the username and firebaseIdToken provided in the
  * request body
  */
 router.route('/add').post(async (req, res) => {
-	const { username, firebase_id_token } = req.body;
+	const { username, firebaseIdToken } = req.body;
 
-	if (!firebase_id_token || !username) {
+	if (!firebaseIdToken || !username) {
 		return res
 			.status(400)
 			.json(
-				'Required username / firebase_id_token not provided in request body.'
+				'Required username / firebaseIdToken not provided in request body.'
 			);
 	}
 
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
+		const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
 		uid = decodedToken.uid;
 	} catch (err) {
 		console.log('Error: ' + err);
@@ -56,7 +56,7 @@ router.route('/add').post(async (req, res) => {
 	}
 
 	const newUser = new User({
-		firebase_id: uid,
+		firebaseId: uid,
 		username: username,
 	});
 
@@ -75,19 +75,19 @@ router.route('/add').post(async (req, res) => {
  * on the boolean passed in as isOrganizer
  */
 router.route('/organizer').put(async (req, res) => {
-	const { firebase_id_token, isOrganizer } = req.body;
+	const { firebaseIdToken, isOrganizer } = req.body;
 
-	if (!firebase_id_token || isOrganizer === undefined) {
+	if (!firebaseIdToken || isOrganizer === undefined) {
 		return res
 			.status(400)
 			.json(
-				'Required firebase_id_token / isOrganizer not provided in request body.'
+				'Required firebaseIdToken / isOrganizer not provided in request body.'
 			);
 	}
 
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
+		const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
 		uid = decodedToken.uid;
 	} catch (err) {
 		console.log('Error ' + err);
@@ -96,12 +96,12 @@ router.route('/organizer').put(async (req, res) => {
 	}
 
 	try {
-		let user = await User.findOne({ firebase_id: uid });
+		let user = await User.findOne({ firebaseId: uid });
 
 		if (!user)
 			return res
 				.status(404)
-				.json('Could not find user specified by firebase_id_token.');
+				.json('Could not find user specified by firebaseIdToken.');
 
 		user.isOrganizer = isOrganizer;
 		user.save();
@@ -121,17 +121,17 @@ router.route('/organizer').put(async (req, res) => {
  * Deletes a user by firebase id token
  */
 router.route('/').delete(async (req, res) => {
-	const { firebase_id_token } = req.body;
+	const { firebaseIdToken } = req.body;
 
-	if (!firebase_id_token) {
+	if (!firebaseIdToken) {
 		return res
 			.status(400)
-			.json('Required firebase_id_token not provided in request body.');
+			.json('Required firebaseIdToken not provided in request body.');
 	}
 
 	let uid;
 	try {
-		const decodedToken = await admin.auth().verifyIdToken(firebase_id_token);
+		const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
 		uid = decodedToken.uid;
 	} catch (err) {
 		console.log('Error ' + err);
@@ -140,12 +140,12 @@ router.route('/').delete(async (req, res) => {
 	}
 
 	try {
-		let user = await User.findOne({ firebase_id: uid });
+		let user = await User.findOne({ firebaseId: uid });
 
 		if (!user)
 			return res
 				.status(404)
-				.json('Could not find user specified by firebase_id_token.');
+				.json('Could not find user specified by firebaseIdToken.');
 
 		await user.deleteOne();
 		res.json('User ' + uid + ' was deleted!');

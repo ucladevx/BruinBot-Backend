@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const suppressLogs = require('mocha-suppress-logs');
 const assert = require('assert');
-let app = require('../../app');
+let { app } = require('../../app');
 const fs = require('fs');
 
 let { Item } = require('../../models/item.model');

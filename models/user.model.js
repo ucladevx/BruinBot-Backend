@@ -16,7 +16,7 @@ const userSchema = new schema(
 			required: true,
 			default: false,
 		},
-		firebase_id: {
+		firebaseId: {
 			type: String,
 			required: true,
 			unique: true,

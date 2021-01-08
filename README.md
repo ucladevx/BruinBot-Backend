@@ -14,6 +14,12 @@ Start the database
 mongod --config /usr/local/etc/mongod.conf
 ```
 
+Migrate the database to the latest migration (fill the local dev database with useful objects such as bots, mapnodes, paths, and users):
+```
+npx migrate list
+npx migrate up
+```
+
 Start the server (make sure you have the `.env` file)
 ```
 npm run dev
