@@ -22,12 +22,6 @@ const eventSchema = new schema({
 		unique: false,
 		sparse: true,
 	},
-	admins: {
-		type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-		required: true,
-		unique: false,
-		sparse: true,
-	},
 });
 
 const Event = mongoose.model('Event', eventSchema);

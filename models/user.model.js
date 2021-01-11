@@ -11,16 +11,17 @@ const userSchema = new schema(
 			trim: true,
 			minlength: 5,
 		},
-		isOrganizer: {
-			type: Boolean,
-			required: true,
-			default: false,
-		},
 		firebaseId: {
 			type: String,
 			required: true,
 			unique: true,
 			trim: true,
+		},
+		eventId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Event',
+			trim: true,
+			default: null,
 		},
 	},
 	{
