@@ -3,6 +3,7 @@ let multer = require('multer');
 
 let { Item } = require('../models/item.model');
 let { Event } = require('../models/event.model');
+let { BruinBot } = require('../models/bruinbot.model');
 let { uploadImageToS3, deleteImageFromS3 } = require('../util/aws');
 
 const router = express.Router();
@@ -115,6 +116,11 @@ router.delete('/', async (req, res) => {
 		await item.deleteOne();
 		event.items.pull(itemId);
 		await event.save();
+
+		await BruinBot.updateMany(
+			{ _id: { $in: event.bots } },
+			{ $pull: { inventory: { item: itemId } } }
+		);
 
 		let data = await deleteImageFromS3(item.imgKey);
 		res.json({ item, deletedImage: data });
