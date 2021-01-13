@@ -109,18 +109,12 @@ eventsRouter.route('/admins').get(async (req, res) => {
  * provided in the request body
  */
 eventsRouter.route('/add').post((req, res) => {
-	const { name, botIds, adminIds } = req.body;
+	const { name, botIds } = req.body;
 
-	if (!name || !botIds || !adminIds) {
+	if (!name || !botIds) {
 		return res
 			.status(400)
 			.json('Please provide name, bots, and admins of the event.');
-	}
-
-	if (botIds.length == 0 || adminIds.length == 0) {
-		return res
-			.status(400)
-			.json('The list of bot IDs and admin IDs cannot be empty');
 	}
 
 	let itemIds = req.body.itemIds;
@@ -132,7 +126,6 @@ eventsRouter.route('/add').post((req, res) => {
 		name: name,
 		items: itemIds,
 		bots: botIds,
-		admins: adminIds,
 	});
 
 	newEvent
@@ -197,35 +190,6 @@ eventsRouter.route('/items').put(async (req, res) => {
 		event.items.push(itemId);
 		await event.save();
 		res.json('Item ' + itemId + ' was added to Event ' + eventId + '.');
-	} catch (err) {
-		console.log('Error ' + err);
-		res.status(400).json(err);
-	}
-});
-
-/**
- * Adds an admin id to the list of admin ids to an event specified by id
- */
-eventsRouter.route('/admins').put(async (req, res) => {
-	const { eventId, adminId } = req.body;
-
-	if (!eventId) {
-		return res.status(400).json('Please provide the id of the event.');
-	}
-
-	if (!adminId) {
-		return res.status(400).json('Please provide the id of the admin.');
-	}
-
-	try {
-		let event = await Event.findById(eventId);
-
-		if (!event)
-			return res.status(404).json('Could not find event specified by eventId.');
-
-		event.admins.push(adminId);
-		await event.save();
-		res.json('Admin ' + adminId + ' was added to Event ' + eventId + '.');
 	} catch (err) {
 		console.log('Error ' + err);
 		res.status(400).json(err);
