@@ -26,6 +26,25 @@ router.route('/').get((req, res) => {
 		.catch((err) => res.status(400).json(err));
 });
 
+router.route('/user').get(async (req, res) => {
+	const firebaseIdToken = req.query.firebaseIdToken;
+	if (!firebaseIdToken)
+		return res
+			.status(400)
+			.json(`'firebaseIdToken' not provided in request params`);
+
+	try {
+		const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+		let data = await User.findOne({ firebaseId: decodedToken.uid }).exec();
+		if (data) res.json(data);
+		else res.status(404).json('Cannot find user');
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+		return;
+	}
+});
+
 /**
  * ------------------------- POST (add new objects) -------------------------
  */

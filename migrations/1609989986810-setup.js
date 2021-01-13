@@ -7,12 +7,6 @@ let { Path, MapNode } = require('../models/map.model');
  * Make any changes you need to make to the database here
  */
 async function up() {
-	let user1 = await User.create({
-		username: 'Tim Cook',
-		isOrganizer: true,
-		firebaseId: 'timcooks',
-	});
-
 	let bot1 = await BruinBot.create({
 		name: 'Bruin Bear',
 		location: {
@@ -31,11 +25,17 @@ async function up() {
 		inventory: [],
 	});
 
-	await Event.create({
+	let event = await Event.create({
 		name: 'Bear Gathering',
 		items: [],
 		bots: [bot1._id, bot2._id],
-		admins: [user1._id],
+	});
+
+	await User.create({
+		username: 'Tim Cook',
+		isOrganizer: true,
+		firebaseId: 'N1EXWNjA7tSCspmewY4BGaCkdGv1',
+		eventId: event._id,
 	});
 
 	let luskin = await MapNode.create({
