@@ -3,6 +3,12 @@ let { BruinBot } = require('../models/bruinbot.model');
 let { Event } = require('../models/event.model');
 let { Path, MapNode } = require('../models/map.model');
 let { Item } = require('../models/item.model');
+const { deleteImageFromS3 } = require('../util/aws');
+
+const stockImageA =
+	'https://upload.wikimedia.org/wikipedia/commons/1/18/Classic_bubble_tea.jpg';
+const stockImageB =
+	'https://www.lindaremedical.co.uk/wp-content/uploads/2020/05/Surgical-Face-Mask.jpg';
 
 /**
  * Make any changes you need to make to the database here
@@ -12,8 +18,7 @@ async function up() {
 		let item = await Item.create({
 			name: 'Boba Tea',
 			price: 4.99,
-			imgSrc:
-				'https://upload.wikimedia.org/wikipedia/commons/1/18/Classic_bubble_tea.jpg',
+			imgSrc: stockImageA,
 			imgKey: 'bobat.jpg',
 			weight: 0,
 		});
@@ -21,8 +26,7 @@ async function up() {
 		let freeItem = await Item.create({
 			name: 'Mask',
 			price: 0,
-			imgSrc:
-				'https://www.lindaremedical.co.uk/wp-content/uploads/2020/05/Surgical-Face-Mask.jpg',
+			imgSrc: stockImageB,
 			imgKey: 'mask.jpg',
 			weight: 0,
 		});
@@ -336,6 +340,14 @@ async function down() {
 		await Event.deleteMany({});
 		await Path.deleteMany({});
 		await MapNode.deleteMany({});
+		let items = await Item.find({});
+		await Item.deleteMany({});
+		for (let i = 0; i < items.length; i++) {
+			let imgKey = items[i].imgKey;
+			if (items[i].imgSrc != stockImageA && items[i].imgSrc != stockImageB) {
+				await deleteImageFromS3(imgKey);
+			}
+		}
 	}
 }
 
