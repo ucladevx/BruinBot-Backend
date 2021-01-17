@@ -2,19 +2,41 @@ let { User } = require('../models/user.model');
 let { BruinBot } = require('../models/bruinbot.model');
 let { Event } = require('../models/event.model');
 let { Path, MapNode } = require('../models/map.model');
+let { Item } = require('../models/item.model');
 
 /**
  * Make any changes you need to make to the database here
  */
 async function up() {
 	if (process.env.NODE_ENV != 'production') {
+		let item = await Item.create({
+			name: 'Boba Tea',
+			price: 4.99,
+			imgSrc:
+				'https://upload.wikimedia.org/wikipedia/commons/1/18/Classic_bubble_tea.jpg',
+			imgKey: 'bobat.jpg',
+			weight: 0,
+		});
+
+		let freeItem = await Item.create({
+			name: 'Mask',
+			price: 0,
+			imgSrc:
+				'https://www.lindaremedical.co.uk/wp-content/uploads/2020/05/Surgical-Face-Mask.jpg',
+			imgKey: 'mask.jpg',
+			weight: 0,
+		});
+
 		let bot1 = await BruinBot.create({
 			name: 'Bruin Bear',
 			location: {
 				latitude: 34.06951864116873,
 				longitude: -118.44476267506832,
 			},
-			inventory: [],
+			inventory: [
+				{ item: item.id, quantity: 30 },
+				{ item: freeItem.id, quantity: 20 },
+			],
 		});
 
 		let bot2 = await BruinBot.create({
@@ -28,7 +50,7 @@ async function up() {
 
 		let event = await Event.create({
 			name: 'Bear Gathering',
-			items: [],
+			items: [item.id, freeItem.id],
 			bots: [bot1._id, bot2._id],
 		});
 
