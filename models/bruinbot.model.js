@@ -3,6 +3,14 @@ const map = require('./map.model.js');
 
 const schema = mongoose.Schema;
 
+// Sale statistics for a bot
+const saleStats = new schema({
+	itemsSold: {
+		type: Number,
+		default: 0,
+	},
+});
+
 // Represents an item and how many instances of it a bot holds
 const inventoryArticle = new schema({
 	item: {
@@ -40,9 +48,14 @@ const bruinBotSchema = new schema({
 		type: [inventoryArticle],
 		required: true,
 	},
+	sales: {
+		type: saleStats,
+		required: true,
+	},
 });
 
 const BruinBot = mongoose.model('BruinBot', bruinBotSchema);
 const InventoryArticle = mongoose.model('InventoryArticle', inventoryArticle);
+const SaleStats = mongoose.model('SaleStats', saleStats);
 
-module.exports = { BruinBot, InventoryArticle };
+module.exports = { BruinBot, InventoryArticle, SaleStats };

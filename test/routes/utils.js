@@ -21,6 +21,9 @@ async function createAndSaveBot(bot) {
 		status: 'Idle',
 		name: bot.name,
 		inventory: [],
+		sales: {
+			itemsSold: 0,
+		},
 	});
 
 	return await newBot.save();

@@ -112,6 +112,9 @@ botsRouter.route('/').post((req, res) => {
 		status: 'Idle',
 		name: name,
 		inventory: [],
+		sales: {
+			itemsSold: 0,
+		},
 	});
 
 	newBot.save(function (err) {
@@ -148,10 +151,15 @@ botsRouter.route('/addItem').post(async (req, res) => {
 			return res.status(404).json('Could not find bot specified by botId.');
 
 		let isNewInventoryItem = true;
+		let totalItemsSold = parseInt(bot.sales.itemsSold);
 
 		bot.inventory.forEach((article) => {
 			if (article.item == itemId) {
 				isNewInventoryItem = false;
+				// if quantity is less than 0, it indicates the item has been bought, so add it to bot's sale statistics
+				if (parseInt(quantity) < 0)
+					totalItemsSold += Math.abs(parseInt(quantity));
+
 				article.set({
 					quantity: parseInt(article.quantity) + parseInt(quantity),
 				});
@@ -166,6 +174,8 @@ botsRouter.route('/addItem').post(async (req, res) => {
 
 			bot.inventory.push(newInventoryArticle);
 		}
+
+		bot.sales.itemsSold = totalItemsSold;
 
 		await bot.save();
 		console.log('Added items to bot inventory: ', bot);
