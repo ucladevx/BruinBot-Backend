@@ -1,5 +1,5 @@
 const { app } = require('./app');
-const { wss } = require('./wss');
+const { wss, messageHandler } = require('./wss');
 const { EXPRESS_PORT } = require('./constants');
 
 const port = EXPRESS_PORT;
@@ -11,9 +11,9 @@ app.on('Mongoose ready', () => {
 	});
 
 	wss.on('connection', (ws) => {
-		ws.on('message', (message) => {
-			console.log('received: %s', message);
-			ws.send(`received: ${message}`);
+		ws.on('message', (msg) => {
+			messageHandler(msg);
+			ws.send(`received: ${msg}`);
 		});
 
 		ws.send('Welcome to BruinBot!');
