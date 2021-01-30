@@ -38,12 +38,15 @@ async function up() {
 				longitude: -118.44476267506832,
 			},
 			inventory: [
-				{ item: item.id, quantity: 30 },
-				{ item: freeItem.id, quantity: 20 },
+				{
+					item: item.id,
+					quantity: 30,
+				},
+				{
+					item: freeItem.id,
+					quantity: 20,
+				},
 			],
-			sales: {
-				itemsSold: 0,
-			},
 		});
 
 		let bot2 = await BruinBot.create({
@@ -53,9 +56,6 @@ async function up() {
 				longitude: -118.4469310705838,
 			},
 			inventory: [],
-			sales: {
-				itemsSold: 0,
-			},
 		});
 
 		let event = await Event.create({

@@ -3,9 +3,9 @@ const map = require('./map.model.js');
 
 const schema = mongoose.Schema;
 
-// Sale statistics for a bot
+// Sale statistics for an inventory article (i.e. an item)
 const saleStats = new schema({
-	itemsSold: {
+	numSold: {
 		type: Number,
 		default: 0,
 	},
@@ -21,6 +21,9 @@ const inventoryArticle = new schema({
 	quantity: {
 		type: Number,
 		default: 0,
+	},
+	sales: {
+		type: saleStats,
 	},
 });
 
@@ -46,10 +49,6 @@ const bruinBotSchema = new schema({
 	},
 	inventory: {
 		type: [inventoryArticle],
-		required: true,
-	},
-	sales: {
-		type: saleStats,
 		required: true,
 	},
 });
