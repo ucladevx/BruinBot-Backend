@@ -141,6 +141,8 @@ botsRouter.route('/addItem').post(async (req, res) => {
 			);
 	}
 
+	if (quantity < 0) return res.status(400).json('Quantity cannot be below 0');
+
 	try {
 		let bot = await BruinBot.findById(botId);
 
@@ -162,6 +164,9 @@ botsRouter.route('/addItem').post(async (req, res) => {
 			const newInventoryArticle = new InventoryArticle({
 				item: itemId,
 				quantity: quantity,
+				sales: {
+					numSold: 0,
+				},
 			});
 
 			bot.inventory.push(newInventoryArticle);
@@ -230,6 +235,64 @@ botsRouter.route('/toNode').post(async (req, res) => {
 /**
  * --------------------- PUT (update existing objects) ----------------------
  */
+
+/**
+ * Purchases an existing item from an existing bot
+ */
+botsRouter.route('/purchase').put(async (req, res) => {
+	const botId = req.body.botId;
+	const itemId = req.body.itemId;
+	const quantity = req.body.quantity;
+
+	if (!botId || !itemId || !quantity) {
+		return res
+			.status(400)
+			.json(
+				'Required parameters botId / itemId / quantity not in request body.'
+			);
+	}
+
+	if (quantity < 0) return res.status(400).json('Quantity cannot be below 0');
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		let itemFound = false;
+
+		bot.inventory.forEach((article) => {
+			if (article.item == itemId) {
+				itemFound = true;
+				article.set({
+					sales: {
+						numSold: parseInt(article.sales.numSold) + parseInt(quantity),
+					},
+				});
+
+				article.set({
+					quantity: parseInt(article.quantity) - parseInt(quantity),
+				});
+			}
+		});
+
+		if (!itemFound) {
+			return res
+				.status(400)
+				.json('Could not find the item specified by itemId in bot inventory');
+		}
+
+		await bot.save();
+		console.log('Purchased items from bot inventory: ', bot);
+		res.json(
+			`Successfully purchased ${quantity} instances of item ${itemId} from bot ${botId}`
+		);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
 
 /**
  * Update BruinBot object with specified id to have new location.

@@ -38,8 +38,14 @@ async function up() {
 				longitude: -118.44476267506832,
 			},
 			inventory: [
-				{ item: item.id, quantity: 30 },
-				{ item: freeItem.id, quantity: 20 },
+				{
+					item: item.id,
+					quantity: 30,
+				},
+				{
+					item: freeItem.id,
+					quantity: 20,
+				},
 			],
 		});
 
