@@ -6,6 +6,8 @@ const { MapNode, Path } = require('../models/map.model');
 const { BOT_SPEED, VICINITY } = require('../constants');
 const { coordDistanceM } = require('../util/utils');
 
+const { sockets } = require('../sockets');
+
 /**
  * ----------------- GET (return information about objects) ----------------
  */
@@ -16,6 +18,10 @@ const { coordDistanceM } = require('../util/utils');
 mapRouter.route('/').get(async (req, res) => {
 	try {
 		const paths = await Path.find().populate('nodeA').populate('nodeB');
+		sockets.forEach((sock) => {
+			// If this socket is the correct destination
+			sock.write(JSON.stringify(paths));
+		});
 		res.json(paths);
 	} catch (err) {
 		console.log('Error: ' + err);
