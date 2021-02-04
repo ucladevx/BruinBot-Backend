@@ -23,7 +23,6 @@ server.on('connection', (sock) => {
 		);
 	});
 
-	// Add a 'close' event handler to this instance of socket
 	sock.on('close', () => {
 		let index = sockets.findIndex((o) => {
 			return (
