@@ -19,3 +19,6 @@ virtualenv==20.1.0
 virtualenv-clone==0.5.4
 virtualenvwrapper==4.8.4
 Werkzeug==1.0.1
+pymongo==3.8.0
+dnspython
+python-dotenv==0.15.0
