@@ -1,7 +1,6 @@
 module.exports = {
 	// App constants
-	EXPRESS_PORT: 8080,
-	TCP_PORT: 8082,
+	PORT: 8080,
 
 	// Hardware constants
 	BOT_SPEED: 0.5, // in m/s
