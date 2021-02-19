@@ -1,16 +1,18 @@
 const { app } = require('./app');
-const { EXPRESS_PORT, TCP_PORT } = require('./constants');
-const { tcp } = require('./sockets');
+const { wss } = require('./wss');
+const { PORT } = require('./constants');
 
+const port = PORT;
 const host = '0.0.0.0';
 
 app.on('Mongoose ready', () => {
-	app.listen(EXPRESS_PORT, host, () => {
-		console.log(
-			`The server is accepting connections from ${host}:${EXPRESS_PORT}!\n`
-		);
+	const server = app.listen(port, host, () => {
+		console.log(`The server is accepting connections from ${host}:${port}!\n`);
 	});
-	tcp.listen(TCP_PORT, host, () => {
-		console.log('TCP Server is running on port ' + TCP_PORT + '.');
+
+	server.on('upgrade', (request, socket, head) => {
+		wss.handleUpgrade(request, socket, head, (ws) => {
+			wss.emit('connection', ws, request);
+		});
 	});
 });

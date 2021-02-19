@@ -1,34 +1,26 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-import socket
+import asyncio
+import websockets
 
-HOST = '127.0.0.1'
-PORT = 8082
+async def connect_and_keep_alive():
+    uri = "ws://localhost:8080/"
+    timeout = 10
+    async with websockets.connect(uri) as websocket:
+        msg = "Hi! I'm Teddy Bear."
+        await websocket.send(msg)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        res = await websocket.recv()
+        print(res)
 
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        while True:
+            try:
+                res = await asyncio.wait_for(websocket.recv(), timeout)
+                if res == "shutdown":
+                    break
+                print(res)
+            except:
+                # Send request to ws server here...
+                await websocket.send("Timeout! Pinging from Teddy Bear...")
 
-sock.settimeout(5) # Number of seconds we want to wait before pinging the server
-
-sock.connect((HOST, PORT))
-
-sock.send(b'This is Teddy Bear.')
-
-while True:
-    try:
-        msg = sock.recv(1024).decode("utf-8") 
-
-    except socket.timeout:
-        # Do things like ping the server or make request to the server here
-        print('Socket timeout, pinging server...')
-        sock.send(b'Heartbeat from Teddy Bear.')
-        continue
-
-    if msg == 'shutdown':
-        print('Shutting down...')
-        break
-
-    print('Received: {}'.format(msg))
-
-sock.close()
+asyncio.get_event_loop().run_until_complete(connect_and_keep_alive())
