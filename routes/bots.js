@@ -3,7 +3,7 @@ const express = require('express');
 const botsRouter = express.Router();
 
 let { BruinBot, InventoryArticle } = require('../models/bruinbot.model');
-let { MapNode } = require('../models/map.model');
+let { MapNode, Location } = require('../models/map.model');
 let PathFinding = require('../util/pathfinding');
 let { coordDistanceM } = require('../util/utils');
 let { VICINITY } = require('../constants');
@@ -86,11 +86,34 @@ botsRouter.route('/location').get(async (req, res) => {
 });
 
 /**
+ * Returns list of coordinates in the bot's waypoint queue.
+ */
+botsRouter.route('/queue').get(async (req, res) => {
+	const botId = req.query.botId;
+
+	if (!botId) {
+		return res.status(400).json('Required botId not in request query.');
+	}
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		res.json(bot.queue);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
  * ------------------------- POST (add new objects) -------------------------
  */
 
 /**
- * Adds a new BruinBot object to the FleetManager's bot array with a Location
+ * Adds a new BruinBot object to the database with a Location
  * and name as provided in the request's body.
  */
 botsRouter.route('/').post((req, res) => {
@@ -330,6 +353,52 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 		await bot.save();
 		console.log(`Successfully updated location of bot ${botId}`);
 		res.json(`Successfully updated location of bot ${botId}`);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Replace BruinBot object's waypoint queue.
+ */
+botsRouter.route('/replaceQueue').put(async (req, res) => {
+	const botId = req.body.botId;
+	const latArray = req.body.latitudeArray;
+	const lonArray = req.body.longitudeArray;
+
+	if (!botId || !latArray || !lonArray) {
+		return res
+			.status(400)
+			.json('Required botId / latArray / lonArray data not in request body.');
+	}
+
+	if (latArray.length != lonArray.length) {
+		return res.status(400).json('Incomplete arrays of coordinate pairs.');
+	}
+
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		var newQueue = [];
+
+		for (var i = 0; i < latArray.length; i++) {
+			newQueue.push(
+				new Location({
+					latitude: parseFloat(latArray[i]),
+					longitude: parseFloat(lonArray[i]),
+				})
+			);
+		}
+
+		bot.queue = newQueue;
+
+		await bot.save();
+		console.log(`Successfully replaced queue of bot ${botId}`);
+		res.json(`Successfully replaced queue of bot ${botId}`);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);

@@ -41,6 +41,9 @@ const bruinBotSchema = new schema({
 	path: {
 		type: [map.Location.schema],
 	},
+	queue: {
+		type: [map.Location.schema],
+	},
 	name: {
 		type: String,
 		required: true,
