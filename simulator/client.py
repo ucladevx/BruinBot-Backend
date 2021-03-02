@@ -7,7 +7,7 @@ async def connect_and_keep_alive():
     uri = "ws://localhost:8080/"
     timeout = 10
     async with websockets.connect(uri) as websocket:
-        msg = "Hi! I'm Teddy Bear."
+        msg = "register Teddy Bear"
         await websocket.send(msg)
 
         res = await websocket.recv()
@@ -21,6 +21,6 @@ async def connect_and_keep_alive():
                 print(res)
             except:
                 # Send request to ws server here...
-                await websocket.send("Timeout! Pinging from Teddy Bear...")
+                await websocket.send("path")
 
 asyncio.get_event_loop().run_until_complete(connect_and_keep_alive())
