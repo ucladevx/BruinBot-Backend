@@ -34,10 +34,10 @@ const updateLocationHandler = async function (botId, lat, lon) {
 const messageHandler = (msg) => {
 	const msgSplit = msg.split(' ');
 	console.log(msg);
-	if (msgSplit[0] == 'LOCATION' && msgSplit.length == 4) {
+	if (msgSplit[0] == 'location' && msgSplit.length == 4) {
 		updateLocationHandler(msgSplit[1], msgSplit[2], msgSplit[3]);
 		return 'Accepted and attempting location update request to database!';
-	} else if (msgSplit[0] == 'JOIN') return 'Welcome to BruinBot!';
+	} else if (msgSplit[0] == 'join') return 'Welcome to BruinBot!';
 	else return 'Error: WebSocket request not valid.';
 };
 

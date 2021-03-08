@@ -8,7 +8,7 @@ import random
 async def connect_and_keep_alive(bot_id, uri):
     timeout = 10
     async with websockets.connect(uri) as websocket:
-        msg = "JOIN " + bot_id
+        msg = "join " + bot_id
         await websocket.send(msg)
 
         res = await websocket.recv()
@@ -24,7 +24,7 @@ async def connect_and_keep_alive(bot_id, uri):
                 # Send request to ws server here...
                 rand_lat = random.uniform(-90, 90)
                 rand_lon = random.uniform(-180, 180)
-                await websocket.send("LOCATION " + bot_id + " " + str(rand_lat) + " " + str(rand_lon))
+                await websocket.send("location " + bot_id + " " + str(rand_lat) + " " + str(rand_lon))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
