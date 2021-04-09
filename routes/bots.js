@@ -17,16 +17,21 @@ let { VICINITY } = require('../constants');
  */
 botsRouter.route('/bot').get(async (req, res) => {
 	const botId = req.query.botId;
+
+	// Missing request data
 	if (!botId)
 		return res.status(400).json(`'botId' not provided in request params`);
 
 	try {
+		// Find bot document information by id, populates information about inventory items in bot data
 		let data = await BruinBot.findById(botId).populate({
 			path: 'inventory.item',
 			model: 'Item',
 		});
+		// Return found bot document information to client
 		res.json(data);
 	} catch (err) {
+		// Return error to client
 		res.status(404).json(err);
 	}
 });
@@ -39,25 +44,28 @@ botsRouter.route('/closest').get((req, res) => {
 	const lat = req.query.latitude;
 	const lon = req.query.longitude;
 
+	// Missing request data
 	if (!lat || !lon) {
 		return res
 			.status(400)
 			.json('Required lat / long data not in request body.');
 	}
 
+	// Get array of all bot documents
 	BruinBot.find({}, function (err, bots) {
 		if (err) {
 			console.log('Error: ' + err);
 			res.status(400).json(err);
 			return;
 		}
-
+		// Find closest bot from array of all bot documents
 		let closest = findBotCoords(bots, lat, lon);
+		// Missing bot array data
 		if (closest == null) {
 			res.status(404).json('No bots in collection.');
 			return;
 		}
-
+		// Return closest bot document information to client
 		res.json(closest);
 	});
 });
@@ -68,18 +76,23 @@ botsRouter.route('/closest').get((req, res) => {
 botsRouter.route('/location').get(async (req, res) => {
 	const botId = req.query.botId;
 
+	// Missing request data
 	if (!botId) {
 		return res.status(400).json('Required botId not in request query.');
 	}
 
 	try {
+		// Find bot document information for given bot id
 		let bot = await BruinBot.findById(botId);
 
+		// Missing bot with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
+		// Return only the Location object parameter of found bot
 		res.json(bot.location);
 	} catch (err) {
+		// Return and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
@@ -91,18 +104,23 @@ botsRouter.route('/location').get(async (req, res) => {
 botsRouter.route('/queue').get(async (req, res) => {
 	const botId = req.query.botId;
 
+	// Missing request data
 	if (!botId) {
 		return res.status(400).json('Required botId not in request query.');
 	}
 
 	try {
+		// Find bot document information for given bot id
 		let bot = await BruinBot.findById(botId);
 
+		// Missing bot with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
+		// Return only the parameter of queued locations of saved bot
 		res.json(bot.queue);
 	} catch (err) {
+		// Return and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
@@ -121,12 +139,14 @@ botsRouter.route('/').post((req, res) => {
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
 
+	// Missing request data
 	if (!name || !lat || !lon) {
 		return res
 			.status(400)
 			.json('Required name / lat / lon data not in request body.');
 	}
 
+	// Create new BruinBot document with request data and universal defaults
 	const newBot = new BruinBot({
 		location: {
 			latitude: lat,
@@ -137,6 +157,7 @@ botsRouter.route('/').post((req, res) => {
 		inventory: [],
 	});
 
+	// Save new BruinBot document to pre-designated collection and report status
 	newBot.save(function (err) {
 		if (err) {
 			console.log('Error: ' + err);
@@ -149,6 +170,10 @@ botsRouter.route('/').post((req, res) => {
 });
 
 /**
+ * --------------------- PUT (update existing objects) ----------------------
+ */
+
+/**
  * Adds an existing item to an existing bot
  */
 botsRouter.route('/addItem').post(async (req, res) => {
@@ -156,6 +181,7 @@ botsRouter.route('/addItem').post(async (req, res) => {
 	const itemId = req.body.itemId;
 	const quantity = req.body.quantity;
 
+	// Missing request data
 	if (!botId || !itemId || !quantity) {
 		return res
 			.status(400)
@@ -164,26 +190,34 @@ botsRouter.route('/addItem').post(async (req, res) => {
 			);
 	}
 
+	// Incorrect request data
 	if (quantity < 0) return res.status(400).json('Quantity cannot be below 0');
 
 	try {
+		// Find existing bot by id
 		let bot = await BruinBot.findById(botId);
 
+		// Missing bot with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
 		let isNewInventoryItem = true;
 
+		// Look for existing itemId type in bot's inventory that was requested
 		bot.inventory.forEach((article) => {
+			// If added item type already exists in inventory
 			if (article.item == itemId) {
 				isNewInventoryItem = false;
+				// Increment existing quantity by requested number
 				article.set({
 					quantity: parseInt(article.quantity) + parseInt(quantity),
 				});
 			}
 		});
 
+		// If the itemId type was not found in bot's inventory
 		if (isNewInventoryItem) {
+			// Create new item type document for bot
 			const newInventoryArticle = new InventoryArticle({
 				item: itemId,
 				quantity: quantity,
@@ -191,14 +225,80 @@ botsRouter.route('/addItem').post(async (req, res) => {
 					numSold: 0,
 				},
 			});
-
+			// Add item document to bot's inventory
 			bot.inventory.push(newInventoryArticle);
 		}
 
+		// Save changes made to bot objects, return and log changes
 		await bot.save();
 		console.log('Added items to bot inventory: ', bot);
 		res.json(
 			`Successfully added ${quantity} instances of item ${itemId} to bot ${botId}`
+		);
+	} catch (err) {
+		// Report and log error
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Purchases an existing item from an existing bot
+ */
+botsRouter.route('/purchase').put(async (req, res) => {
+	const botId = req.body.botId;
+	const itemId = req.body.itemId;
+	const quantity = req.body.quantity;
+
+	// Missing request data
+	if (!botId || !itemId || !quantity) {
+		return res
+			.status(400)
+			.json(
+				'Required parameters botId / itemId / quantity not in request body.'
+			);
+	}
+
+	// Incorrect request data
+	if (quantity < 0) return res.status(400).json('Quantity cannot be below 0');
+
+	try {
+		// Find existing bot by id
+		let bot = await BruinBot.findById(botId);
+
+		// Missing bot with requested id
+		if (!bot)
+			return res.status(404).json('Could not find bot specified by botId.');
+
+		let itemFound = false;
+
+		// Look for existing itemId type in bot's inventory that was requested
+		bot.inventory.forEach((article) => {
+			// If the item type was found in the bot's inventory
+			if (article.item == itemId) {
+				itemFound = true;
+				article.set({
+					sales: {
+						numSold: parseInt(article.sales.numSold) + parseInt(quantity),
+					},
+				});
+
+				article.set({
+					quantity: parseInt(article.quantity) - parseInt(quantity),
+				});
+			}
+		});
+
+		if (!itemFound) {
+			return res
+				.status(400)
+				.json('Could not find the item specified by itemId in bot inventory');
+		}
+
+		await bot.save();
+		console.log('Purchased items from bot inventory: ', bot);
+		res.json(
+			`Successfully purchased ${quantity} instances of item ${itemId} from bot ${botId}`
 		);
 	} catch (err) {
 		console.log('Error: ' + err);
@@ -249,68 +349,6 @@ botsRouter.route('/toNode').post(async (req, res) => {
 		await bot.save();
 
 		res.json(nodes);
-	} catch (err) {
-		console.log('Error: ' + err);
-		res.status(400).json(err);
-	}
-});
-
-/**
- * --------------------- PUT (update existing objects) ----------------------
- */
-
-/**
- * Purchases an existing item from an existing bot
- */
-botsRouter.route('/purchase').put(async (req, res) => {
-	const botId = req.body.botId;
-	const itemId = req.body.itemId;
-	const quantity = req.body.quantity;
-
-	if (!botId || !itemId || !quantity) {
-		return res
-			.status(400)
-			.json(
-				'Required parameters botId / itemId / quantity not in request body.'
-			);
-	}
-
-	if (quantity < 0) return res.status(400).json('Quantity cannot be below 0');
-
-	try {
-		let bot = await BruinBot.findById(botId);
-
-		if (!bot)
-			return res.status(404).json('Could not find bot specified by botId.');
-
-		let itemFound = false;
-
-		bot.inventory.forEach((article) => {
-			if (article.item == itemId) {
-				itemFound = true;
-				article.set({
-					sales: {
-						numSold: parseInt(article.sales.numSold) + parseInt(quantity),
-					},
-				});
-
-				article.set({
-					quantity: parseInt(article.quantity) - parseInt(quantity),
-				});
-			}
-		});
-
-		if (!itemFound) {
-			return res
-				.status(400)
-				.json('Could not find the item specified by itemId in bot inventory');
-		}
-
-		await bot.save();
-		console.log('Purchased items from bot inventory: ', bot);
-		res.json(
-			`Successfully purchased ${quantity} instances of item ${itemId} from bot ${botId}`
-		);
 	} catch (err) {
 		console.log('Error: ' + err);
 		res.status(400).json(err);
