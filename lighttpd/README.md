@@ -2,7 +2,8 @@
 
 # Installation
 
-MacOS - brew install lighttpd Download from here alternatively: https://www.lighttpd.net/download/
+MacOS - brew install lighttpd 
+Download from here alternatively: https://www.lighttpd.net/download/
 
 # Modifying config file
 
@@ -23,3 +24,4 @@ You should now be able to visit `localhost:8090` to view the webserver.
 # Other
 
 - If you want to modify the port on which the server runs, edit the config file's server.port to whichever port you would like.
+- You could also play around with the index.html file and the camera feed (which is currently the webcam)
