@@ -7,7 +7,7 @@ Download from here alternatively: https://www.lighttpd.net/download/
 
 # Modifying config file
 
-Replace the config file located at /usr/local/etc/lighttpd/lighttpd.conf with the config file in this directory
+Replace the config file located at `/usr/local/etc/lighttpd/lighttpd.conf` with the config file in this directory
 
 # Creating index.html
 
