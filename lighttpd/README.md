@@ -11,7 +11,7 @@ Replace the config file located at `/usr/local/etc/lighttpd/lighttpd.conf` with 
 
 # Creating index.html
 
-There should be an existing index.html file located at /usr/local/var/www/index.html. If it doesn't exist, create an index.html at the specified path. Copy the code from the index.html located in this directory to your local index.html file
+There should be an existing index.html file located at `/usr/local/var/www/index.html`. If it doesn't exist, create an index.html at the specified path. Copy the code from the index.html located in this directory to your local index.html file
 
 # Running Lighttpd
 
