@@ -2,8 +2,8 @@
 
 # Installation
 
-MacOS - brew install lighttpd 
-Download from here alternatively: https://www.lighttpd.net/download/
+Download from here: https://www.lighttpd.net/download/
+alternatively on macOS, if you have homebrew installed, run `brew install lighttpd` 
 
 # Modifying config file
 
