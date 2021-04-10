@@ -1,0 +1,47 @@
+<html>
+  <style>
+    #camera {
+      width: 800;
+      height: 600;
+    }
+    #container {
+      margin: 0px auto;
+      width: 500px;
+      height: 375px;
+      border: 10px #333 solid;
+    }
+    #videoElement {
+      width: 500px;
+      height: 375px;
+      background-color: #666;
+    }
+  </style>
+<body>
+<h1>This is a test to see if LigHTTPd works</h1>
+<p>Boy was this a <em>pain</em> to figure out</p>
+<button type="button">Click me</button>
+<strong>This gif is where you would be able to put the camera feed from the robot and you could have a button to control the camera angle if needed using the servos</strong>
+<div id="container">
+	<video autoplay="true" id="videoElement" allow="camera">
+
+	</video>
+</div>
+<script>
+  navigator.permissions.query({name: 'camera'}).then((result) => {
+    console.log(result);
+  })
+  var video = document.querySelector("#videoElement");
+
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function (stream) {
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch(function (err0r) {
+      console.log("Something went wrong!");
+    });
+}
+</script>
+</body>
+</html>
