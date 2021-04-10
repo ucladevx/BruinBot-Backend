@@ -3,8 +3,7 @@ const express = require('express');
 const mapRouter = express.Router();
 let PathFinding = require('../util/pathfinding');
 
-
-const { Location, MapNode, Path } = require('../models/map.model');
+const { MapNode, Path } = require('../models/map.model');
 const { BOT_SPEED, VICINITY } = require('../constants');
 const { coordDistanceM } = require('../util/utils');
 
@@ -93,8 +92,8 @@ mapRouter.route('/pathBetween').get(async (req, res) => {
 		return res.status(400).json('One or more of the lat/lon are missing');
 
 	try {
-		let endNode = await PathFinding.getClosestMapNode(lat1,lon1);
-		let startNode = await PathFinding.getClosestMapNode(lat2,lon2);
+		let endNode = await PathFinding.getClosestMapNode(lat1, lon1);
+		let startNode = await PathFinding.getClosestMapNode(lat2, lon2);
 		let nodes = await PathFinding.getPathBetween(startNode, endNode);
 		/*if (startNode.latitude != lat1 || startNode.longitude != lon1){
 			const curLocation = new Location({
