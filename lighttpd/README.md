@@ -21,6 +21,11 @@ lighttpd -f /usr/local/etc/lighttpd/lighttpd.conf
 
 You should now be able to visit `localhost:8090` to view the webserver.
 
+To restart the server for any reason:
+```
+lighttpd -f /usr/local/etc/lighttpd/lighttpd.conf restart
+```
+
 # Other
 
 - If you want to modify the port on which the server runs, edit the config file's server.port to whichever port you would like.
