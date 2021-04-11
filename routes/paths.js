@@ -1,6 +1,7 @@
 const express = require('express');
 
 const mapRouter = express.Router();
+let PathFinding = require('../util/pathfinding');
 
 const { MapNode, Path } = require('../models/map.model');
 const { BOT_SPEED, VICINITY } = require('../constants');
@@ -69,6 +70,39 @@ mapRouter.route('/nodes/location').get(async (req, res) => {
 			nodes[i].distance = distance;
 			nodes[i].eta = eta;
 		}
+		res.json(nodes);
+	} catch (err) {
+		console.log('Error: ' + err);
+		res.status(400).json(err);
+	}
+});
+
+/**
+ * Get path between two Locations
+ *
+ * @param {number} Latitude of first location
+ * @param {number} Longitude of second location
+ * @param {number} Latitude of second location
+ * @param {number} Longitude of second location
+ */
+mapRouter.route('/pathBetween').get(async (req, res) => {
+	const { lat1, lon1, lat2, lon2 } = req.query;
+
+	if (!lat1 || !lon1 || !lat2 || !lon2)
+		return res.status(400).json('One or more of the lat/lon are missing');
+
+	try {
+		let endNode = await PathFinding.getClosestMapNode(lat1, lon1);
+		let startNode = await PathFinding.getClosestMapNode(lat2, lon2);
+		let nodes = await PathFinding.getPathBetween(startNode, endNode);
+		/*if (startNode.latitude != lat1 || startNode.longitude != lon1){
+			const curLocation = new Location({
+					latitude: lat1,
+					longitude: lon1
+			});
+			nodes.unshift(curLocation); // straight line from current location to nearest start node
+		}*/
+
 		res.json(nodes);
 	} catch (err) {
 		console.log('Error: ' + err);
