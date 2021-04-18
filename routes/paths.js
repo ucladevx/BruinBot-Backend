@@ -7,7 +7,7 @@ const { MapNode, Path } = require('../models/map.model');
 const { BOT_SPEED, VICINITY } = require('../constants');
 const { coordDistanceM } = require('../util/utils');
 
-const { wss } = require('../wss');
+const { clients } = require('../wss');
 
 /**
  * ----------------- GET (return information about objects) ----------------
@@ -19,8 +19,11 @@ const { wss } = require('../wss');
 mapRouter.route('/').get(async (req, res) => {
 	try {
 		const paths = await Path.find().populate('nodeA').populate('nodeB');
-		wss.clients.forEach((client) => {
-			client.send(JSON.stringify(paths));
+		clients.forEach((client, key) => {
+			// Determine which client to send to by key
+			if (key === 'Teddy Bear') {
+				client.send(JSON.stringify(paths));
+			}
 		});
 		res.json(paths);
 	} catch (err) {
