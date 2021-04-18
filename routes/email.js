@@ -5,7 +5,7 @@ const { Email } = require('../models/email.model');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-	const { email } = req.query;
+	const { email } = req.body;
 
 	if (!email) return res.status(404).json('Please provide an email address.');
 
