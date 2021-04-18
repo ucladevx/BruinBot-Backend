@@ -45,26 +45,27 @@ const updateLocationHandler = async function (botId, lat, lon) {
 	}
 };
 
-const messageHandler = async (ws, msg) => {
+const messageHandler = async (msg, ws) => {
 	const msgSplit = msg.split(' ');
 	console.log(`received: ${msg}`);
 	if (msg.startsWith('register')) {
 		const key = msg.split('register')[1].substring(1);
 		clients.set(key, ws);
-		ws.send(`Welcome to BruinBot! ${key} is registered.`);
+		return `Welcome to BruinBot! ${key} is registered.`;
 	} else if (msg.startsWith('path')) {
 		const paths = await Path.find().populate('nodeA').populate('nodeB');
-		ws.send(JSON.stringify(paths));
+		return JSON.stringify(paths);
 	} else if (msgSplit[0] == 'location' && msgSplit.length == 4) {
 		updateLocationHandler(msgSplit[1], msgSplit[2], msgSplit[3]);
-		ws.send('Accepted and attempting location update request to database!');
-	} else if (msgSplit[0] == 'join') ws.send('Welcome to BruinBot!');
-	else ws.send('Error: WebSocket request not valid.');
+		return 'Accepted and attempting location update request to database!';
+	} else if (msgSplit[0] == 'join') return 'Welcome to BruinBot!';
+	else return 'Error: WebSocket request not valid.';
 };
 
 wss.on('connection', (ws) => {
-	ws.on('message', (msg) => {
-		messageHandler(ws, msg);
+	ws.on('message', async (msg) => {
+		const response = await messageHandler(msg, ws);
+		ws.send(response);
 	});
 	ws.on('close', () => {
 		clients.forEach((client, key) => {
