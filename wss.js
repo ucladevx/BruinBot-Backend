@@ -1,4 +1,7 @@
 const WebSocket = require('ws');
+let { BruinBot } = require('./models/bruinbot.model');
+let { coordDistanceM } = require('./util/utils');
+let { VICINITY } = require('./constants');
 
 const { Path } = require('./models/map.model');
 
@@ -16,7 +19,34 @@ const commandBot = () => {
 	});
 };
 
+const updateLocationHandler = async function (botId, lat, lon) {
+	try {
+		let bot = await BruinBot.findById(botId);
+
+		if (!bot) return;
+
+		bot.location.latitude = lat;
+		bot.location.longitude = lon;
+
+		if (bot.status == 'InTransit') {
+			let pathEnd = bot.path[bot.path.length - 1];
+			if (
+				coordDistanceM(lat, lon, pathEnd.latitude, pathEnd.longitude) < VICINITY
+			) {
+				bot.path = [];
+				bot.status = 'Idle';
+			}
+		}
+
+		await bot.save();
+		console.log(`Successfully updated location of bot ${botId}`);
+	} catch (err) {
+		console.log('Error: ' + err);
+	}
+};
+
 const messageHandler = async (ws, msg) => {
+	const msgSplit = msg.split(' ');
 	console.log(`received: ${msg}`);
 	if (msg.startsWith('register')) {
 		const key = msg.split('register')[1].substring(1);
@@ -25,9 +55,11 @@ const messageHandler = async (ws, msg) => {
 	} else if (msg.startsWith('path')) {
 		const paths = await Path.find().populate('nodeA').populate('nodeB');
 		ws.send(JSON.stringify(paths));
-	} else {
-		ws.send('Invalid request');
-	}
+	} else if (msgSplit[0] == 'location' && msgSplit.length == 4) {
+		updateLocationHandler(msgSplit[1], msgSplit[2], msgSplit[3]);
+		ws.send('Accepted and attempting location update request to database!');
+	} else if (msgSplit[0] == 'join') ws.send('Welcome to BruinBot!');
+	else ws.send('Error: WebSocket request not valid.');
 };
 
 wss.on('connection', (ws) => {
