@@ -418,33 +418,40 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 		bot.location.latitude = lat;
 		bot.location.longitude = lon;
 
+		// Will be used in the case that extra messages are needed
 		let optionalMessage = '';
 
 		// In the case that the bot is labeled as InTransit and is near to the end of the bot's current path, reset the
 		// bot's path and set the bot status to Idle
 		if (bot.status == 'InTransit') {
+			// Record current end of path
 			let pathEnd = bot.path[bot.path.length - 1];
 			if (
 				coordDistanceM(lat, lon, pathEnd.latitude, pathEnd.longitude) < VICINITY
 			) {
+				// If the bot has remaining destinations in its queue, pathfind to the next destination
 				if (bot.queue.length > 0) {
+					// Shift the oldest destination (index 0) off of the queue
 					let endLocation = bot.queue.shift();
-					let endNode = await PathFinding.getClosestMapNode(
-						endLocation.latitude,
-						endLocation.longitude
-					);
+					// Find the closest nodes to the bot's current location and the next destination
 					let startNode = await PathFinding.getClosestMapNode(
 						bot.location.latitude,
 						bot.location.longitude
 					);
+					let endNode = await PathFinding.getClosestMapNode(
+						endLocation.latitude,
+						endLocation.longitude
+					);
+					// Find the path between the two found nodes
 					let nodes = await PathFinding.getPathBetween(startNode, endNode);
 					nodes.unshift(bot.location); // straight line from current location to nearest start node
 
+					// Assign the new path to the bot and prepare to report its addition
 					bot.path = nodes;
-					bot.status = 'InTransit';
 					optionalMessage =
 						' Path finished and bot is now moving to new destination.';
 				} else {
+					// Clear the bot's path, change the bot's status, and prepare to report these changes
 					bot.path = [];
 					bot.status = 'Idle';
 					optionalMessage = ' Path finished and bot is now idle.';
@@ -452,7 +459,7 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 			}
 		}
 
-		// Save and report changes to bot
+		// Save and report changes to bot, along with messages about the bot's path if it has been significantly changed
 		await bot.save();
 		console.log(
 			`Successfully updated location of bot ${botId}.${optionalMessage}`
