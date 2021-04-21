@@ -270,37 +270,60 @@ botsRouter.route('/purchase').put(async (req, res) => {
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
-		let itemFound = false;
+		// Introduce status variables for future processing
+		let foundItem = null;
+		let foundItemIndex = null;
+		let notEnoughItems = false;
 
 		// Look for existing itemId type in bot's inventory that was requested
-		bot.inventory.forEach((article) => {
+		bot.inventory.some((article, index) => {
 			// If the item type was found in the bot's inventory
 			if (article.item == itemId) {
-				itemFound = true;
-				article.set({
+				// Save status information about the bot for future processing
+				foundItem = article;
+				foundItemIndex = index;
+				// If there's not enough of the item in the bot, mark that status in future processing
+				if (parseInt(foundItem.quantity) < parseInt(quantity)) {
+					notEnoughItems = true;
+					return true;
+				}
+				// We've found enough of the item; modify its recorded sales and inventory to account for the decrease in inventory
+				foundItem.set({
 					sales: {
-						numSold: parseInt(article.sales.numSold) + parseInt(quantity),
+						numSold: parseInt(foundItem.sales.numSold) + parseInt(quantity),
 					},
 				});
-
-				article.set({
-					quantity: parseInt(article.quantity) - parseInt(quantity),
+				foundItem.set({
+					quantity: parseInt(foundItem.quantity) - parseInt(quantity),
 				});
+				// Stop loop early; we found the item type
+				return true;
 			}
+			// Item type hasn't been found yet; keep looping until found or no more item types left
+			return false;
 		});
-
-		if (!itemFound) {
+		// It's time for that future processing! If there's no item as specified, exit with error
+		if (foundItem === null)
 			return res
 				.status(400)
 				.json('Could not find the item specified by itemId in bot inventory');
-		}
+		// If there''s not enough of the item, exit with error
+		else if (notEnoughItems)
+			return res
+				.status(400)
+				.json('Quantity is larger than availiable inventory for that item');
+		// If there's now no more left of the modified item type, remove it from the bot's inventory
+		else if (parseInt(foundItem.quantity) == 0)
+			bot.inventory.splice(foundItemIndex, 1);
 
+		// We successfully updated the item type info; save the updates and report changes made
 		await bot.save();
 		console.log('Purchased items from bot inventory: ', bot);
 		res.json(
 			`Successfully purchased ${quantity} instances of item ${itemId} from bot ${botId}`
 		);
 	} catch (err) {
+		// Report and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
@@ -315,14 +338,19 @@ botsRouter.route('/purchase').put(async (req, res) => {
 botsRouter.route('/toNode').post(async (req, res) => {
 	const { botId, nodeId } = req.body;
 
+	// Missing request data
 	if (!botId || !nodeId)
 		return res.status(400).json('One or more of botId or nodeId is missing');
 
 	try {
+		// Find existing bot by id
 		let bot = await BruinBot.findById(botId);
+
+		// Missing bot with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
+		// Bot is already traveling; report and exit
 		if (bot.status != 'Idle') {
 			return res
 				.status(400)
@@ -331,25 +359,33 @@ botsRouter.route('/toNode').post(async (req, res) => {
 				);
 		}
 
+		// Find existing node by id
 		let endNode = await MapNode.findById(nodeId);
+
+		// Missing node with requested id
 		if (!endNode)
 			return res
 				.status(404)
 				.json('Could not find endNode specified by nodeId.');
 
+		// Find closest defined node to bot's current location
 		let startNode = await PathFinding.getClosestMapNode(
 			bot.location.latitude,
 			bot.location.longitude
 		);
+		// Perform pathfinding from bot's nearby node to desired destination node
 		let nodes = await PathFinding.getPathBetween(startNode, endNode);
 		nodes.unshift(bot.location); // straight line from current location to nearest start node
 
+		// Assign new path and status to bot and save updates
 		bot.path = nodes;
 		bot.status = 'InTransit';
 		await bot.save();
 
+		// Report changes
 		res.json(nodes);
 	} catch (err) {
+		// Report and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
@@ -363,6 +399,7 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 	const lat = req.body.latitude;
 	const lon = req.body.longitude;
 
+	// Missing request data
 	if (!botId || !lat || !lon) {
 		return res
 			.status(400)
@@ -370,14 +407,19 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 	}
 
 	try {
+		// Find existing bot by id
 		let bot = await BruinBot.findById(botId);
 
+		// Missing node with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
+		// Assign new lat/long to bot
 		bot.location.latitude = lat;
 		bot.location.longitude = lon;
 
+		// In the case that the bot is labeled as InTransit and is near to the end of the bot's current path, reset the
+		// bot's path and set the bot status to Idle
 		if (bot.status == 'InTransit') {
 			let pathEnd = bot.path[bot.path.length - 1];
 			if (
@@ -388,10 +430,12 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 			}
 		}
 
+		// Save and report changes to bot
 		await bot.save();
 		console.log(`Successfully updated location of bot ${botId}`);
 		res.json(`Successfully updated location of bot ${botId}`);
 	} catch (err) {
+		// Report and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
@@ -405,24 +449,28 @@ botsRouter.route('/replaceQueue').put(async (req, res) => {
 	const latArray = req.body.latitudeArray;
 	const lonArray = req.body.longitudeArray;
 
+	// Missing request data
 	if (!botId || !latArray || !lonArray) {
 		return res
 			.status(400)
 			.json('Required botId / latArray / lonArray data not in request body.');
 	}
 
+	// Incorrect request data
 	if (latArray.length != lonArray.length) {
 		return res.status(400).json('Incomplete arrays of coordinate pairs.');
 	}
 
 	try {
+		// Find existing bot by id
 		let bot = await BruinBot.findById(botId);
 
+		// Missing bot with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
+		// Fill new array with Location objects based on request data lat/long
 		var newQueue = [];
-
 		for (var i = 0; i < latArray.length; i++) {
 			newQueue.push(
 				new Location({
@@ -432,12 +480,15 @@ botsRouter.route('/replaceQueue').put(async (req, res) => {
 			);
 		}
 
+		// Update the bot's queue
 		bot.queue = newQueue;
 
+		// Save and report changes to bot
 		await bot.save();
 		console.log(`Successfully replaced queue of bot ${botId}`);
 		res.json(`Successfully replaced queue of bot ${botId}`);
 	} catch (err) {
+		// Report and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
@@ -453,20 +504,26 @@ botsRouter.route('/replaceQueue').put(async (req, res) => {
 botsRouter.route('/').delete(async (req, res) => {
 	const botId = req.body.botId;
 
+	// Missing request data
 	if (!botId) {
 		return res.status(400).json('Required botId data not in request body.');
 	}
 
 	try {
+		// Find existing bot by id
 		let bot = await BruinBot.findById(botId);
 
+		// Missing bot with requested id
 		if (!bot)
 			return res.status(404).json('Could not find bot specified by botId.');
 
+		// Delete the bot
 		await bot.deleteOne();
+		// Report deletion
 		console.log(`Successfully deleted bot: ${bot}`);
 		res.json(`Deleted bot ${botId}`);
 	} catch (err) {
+		// Report and log error
 		console.log('Error: ' + err);
 		res.status(400).json(err);
 	}
