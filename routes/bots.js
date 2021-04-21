@@ -418,6 +418,8 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 		bot.location.latitude = lat;
 		bot.location.longitude = lon;
 
+		let optionalMessage = '';
+
 		// In the case that the bot is labeled as InTransit and is near to the end of the bot's current path, reset the
 		// bot's path and set the bot status to Idle
 		if (bot.status == 'InTransit') {
@@ -425,15 +427,39 @@ botsRouter.route('/updateLocation').put(async (req, res) => {
 			if (
 				coordDistanceM(lat, lon, pathEnd.latitude, pathEnd.longitude) < VICINITY
 			) {
-				bot.path = [];
-				bot.status = 'Idle';
+				if (bot.queue.length > 0) {
+					let endLocation = bot.queue.shift();
+					let endNode = await PathFinding.getClosestMapNode(
+						endLocation.latitude,
+						endLocation.longitude
+					);
+					let startNode = await PathFinding.getClosestMapNode(
+						bot.location.latitude,
+						bot.location.longitude
+					);
+					let nodes = await PathFinding.getPathBetween(startNode, endNode);
+					nodes.unshift(bot.location); // straight line from current location to nearest start node
+
+					bot.path = nodes;
+					bot.status = 'InTransit';
+					optionalMessage =
+						' Path finished and bot is now moving to new destination.';
+				} else {
+					bot.path = [];
+					bot.status = 'Idle';
+					optionalMessage = ' Path finished and bot is now idle.';
+				}
 			}
 		}
 
 		// Save and report changes to bot
 		await bot.save();
-		console.log(`Successfully updated location of bot ${botId}`);
-		res.json(`Successfully updated location of bot ${botId}`);
+		console.log(
+			`Successfully updated location of bot ${botId}.${optionalMessage}`
+		);
+		res.json(
+			`Successfully updated location of bot ${botId}.${optionalMessage}`
+		);
 	} catch (err) {
 		// Report and log error
 		console.log('Error: ' + err);

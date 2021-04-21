@@ -3,7 +3,21 @@ let { BruinBot } = require('./models/bruinbot.model');
 let { coordDistanceM } = require('./util/utils');
 let { VICINITY } = require('./constants');
 
+const { Path } = require('./models/map.model');
+
 const wss = new WebSocket.Server({ noServer: true });
+
+const clients = new Map();
+
+const commandBot = () => {
+	clients.forEach((client, key) => {
+		// Determine if we want to send command, who to send command to, and what to send
+		console.log('Sending command to bots...');
+		if (key === 'Teddy Bear') {
+			client.send('Pinging from server...');
+		}
+	});
+};
 
 const updateLocationHandler = async function (botId, lat, lon) {
 	try {
@@ -31,10 +45,17 @@ const updateLocationHandler = async function (botId, lat, lon) {
 	}
 };
 
-const messageHandler = (msg) => {
+const messageHandler = async (msg, ws) => {
 	const msgSplit = msg.split(' ');
-	console.log(msg);
-	if (msgSplit[0] == 'location' && msgSplit.length == 4) {
+	console.log(`received: ${msg}`);
+	if (msg.startsWith('register')) {
+		const key = msg.split('register')[1].substring(1);
+		clients.set(key, ws);
+		return `Welcome to BruinBot! ${key} is registered.`;
+	} else if (msg.startsWith('path')) {
+		const paths = await Path.find().populate('nodeA').populate('nodeB');
+		return JSON.stringify(paths);
+	} else if (msgSplit[0] == 'location' && msgSplit.length == 4) {
 		updateLocationHandler(msgSplit[1], msgSplit[2], msgSplit[3]);
 		return 'Accepted and attempting location update request to database!';
 	} else if (msgSplit[0] == 'join') return 'Welcome to BruinBot!';
@@ -42,9 +63,21 @@ const messageHandler = (msg) => {
 };
 
 wss.on('connection', (ws) => {
-	ws.on('message', (msg) => {
-		ws.send(messageHandler(msg));
+	ws.on('message', async (msg) => {
+		const response = await messageHandler(msg, ws);
+		ws.send(response);
+	});
+	ws.on('close', () => {
+		clients.forEach((client, key) => {
+			if (ws === client) {
+				console.log(`${key} is disconnected.`);
+				clients.delete(key);
+			}
+		});
 	});
 });
 
+setInterval(commandBot, 10000);
+
 module.exports.wss = wss;
+module.exports.clients = clients;
