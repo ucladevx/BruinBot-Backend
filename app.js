@@ -51,6 +51,7 @@ const itemsRouter = require('./routes/items');
 const eventsRouter = require('./routes/events');
 const pathsRouter = require('./routes/paths');
 const emailRouter = require('./routes/email');
+const paymentsRouter = require('./routes/payments');
 
 app.get('/', (req, res) => {
 	res.json('Welcome to BruinBot API!');
@@ -61,6 +62,7 @@ app.use('/items', itemsRouter);
 app.use('/events', eventsRouter);
 app.use('/paths', pathsRouter);
 app.use('/email', emailRouter);
+app.use('/payments', paymentsRouter);
 
 module.exports.app = app;
 module.exports.db = uri;
