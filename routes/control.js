@@ -16,12 +16,12 @@ controlRouter.route('/move').post(async (req, res) => {
 	console.log(message);
 
 	// validate message
-	let formattedMessage = message.toUpperCase();
+	let formattedMessage = message.toLowerCase();
 	if (
-		formattedMessage !== 'UP' &&
-		formattedMessage !== 'DOWN' &&
-		formattedMessage !== 'RIGHT' &&
-		formattedMessage !== 'LEFT'
+		formattedMessage !== 'up' &&
+		formattedMessage !== 'down' &&
+		formattedMessage !== 'right' &&
+		formattedMessage !== 'left'
 	) {
 		console.log('INVALID MESSAGE');
 		return res.status(400).json(`Invalid message type`);
