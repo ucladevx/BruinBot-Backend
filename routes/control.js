@@ -13,15 +13,14 @@ controlRouter.route('/move').post(async (req, res) => {
 			.status(400)
 			.json(`'botId' and/or 'message' not provided in request body`);
 
-	console.log(message);
-
 	// validate message
 	let formattedMessage = message.toLowerCase();
 	if (
 		formattedMessage !== 'up' &&
 		formattedMessage !== 'down' &&
 		formattedMessage !== 'right' &&
-		formattedMessage !== 'left'
+		formattedMessage !== 'left' &&
+		formattedMessage !== 'off'
 	) {
 		console.log('INVALID MESSAGE');
 		return res.status(400).json(`Invalid message type`);
