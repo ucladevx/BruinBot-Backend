@@ -58,7 +58,11 @@ const messageHandler = async (msg, ws) => {
 	} else if (msgSplit[0] == 'location' && msgSplit.length == 4) {
 		updateLocationHandler(msgSplit[1], msgSplit[2], msgSplit[3]);
 		return 'Accepted and attempting location update request to database!';
-	} else if (msgSplit[0] == 'join') return 'Welcome to BruinBot!';
+	} else if (msgSplit[0] == 'join') {
+		return 'Welcome to BruinBot!';
+	} else if (msg.startsWith('ping')) {
+		return 'Pinging from server...';
+	}
 	else return 'Error: WebSocket request not valid.';
 };
 
