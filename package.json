@@ -1,52 +1,28 @@
 {
-  "name": "bruinbot-backend",
+  "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "npx nodemon server.js",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --fix --ext .js",
-    "test:bots": "mocha test/routes/bots.js --exit",
-    "test:items": "mocha test/routes/items.js --timeout 5000 --exit",
-    "test:pathfinding": "mocha test/util/pathfinding.js --timeout 5000 --exit",
-    "test": "export NODE_ENV=test && npm run test:bots && npm run test:items && npm run test:pathfinding",
-    "test:win": "set NODE_ENV=test && npm run test:bots && npm run test:items && npm run test:pathfinding",
-    "test:coverage": "nyc --reporter=text npm run test",
-    "test:coverage:win": "nyc --reporter=text npm run test:win"
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "build": "tsc",
+    "prestart": "npm run build",
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "Jack Zhang",
+  "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "aws-sdk": "^2.799.0",
     "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "firebase-admin": "^9.4.1",
-    "migrate-mongoose": "^4.0.0",
-    "mongoose": "^5.8.3",
-    "multer": "^1.4.2",
-    "multer-gridfs-storage": "^4.2.0",
-    "node-forge": "^0.10.0",
-    "ws": "^7.4.3"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongodb": "^4.11.0"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "chai-http": "^4.3.0",
-    "eslint": "^7.12.1",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-jsdoc": "^30.7.7",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "mocha": "^8.2.1",
-    "mocha-suppress-logs": "^0.2.0",
-    "nodemon": "^2.0.2",
-    "nyc": "^15.1.0",
-    "prettier": "^2.1.2"
-  },
-  "engines": {
-    "node": ">=10.0.0"
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.14",
+    "tslint": "^6.1.3",
+    "typescript": "^4.8.4"
   }
 }
