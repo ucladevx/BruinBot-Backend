@@ -1,11 +1,11 @@
 const express = require('express');
 
 const mapRouter = express.Router();
-let PathFinding = require('../util/pathfinding');
+let PathFinding = require('../../util/pathfinding');
 
 const { MapNode, Path } = require('../models/map.model');
-const { BOT_SPEED, VICINITY } = require('../constants');
-const { coordDistanceM } = require('../util/utils');
+const { BOT_SPEED, VICINITY } = require('../../constants');
+const { coordDistanceM } = require('../../util/utils');
 
 const { clients } = require('../wss');
 

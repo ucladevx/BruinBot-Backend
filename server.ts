@@ -1,5 +1,5 @@
-import { app } from './app';
-import { PORT } from './constants';
+import { app } from './src/app';
+import { PORT } from './src/constants';
 
 const port = PORT;
 const host = '0.0.0.0';

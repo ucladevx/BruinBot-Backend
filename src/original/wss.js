@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 let { BruinBot } = require('./models/bruinbot.model');
 let { coordDistanceM } = require('./util/utils');
-let { VICINITY } = require('./constants');
+let { VICINITY } = require('../constants');
 
 const { Path } = require('./models/map.model');
 

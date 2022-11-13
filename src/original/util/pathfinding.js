@@ -1,5 +1,5 @@
 const { coordDistanceM } = require('./utils');
-const { Location, MapNode, Path } = require('../models/map.model');
+const { Location, MapNode, Path } = require('../original/models/map.model');
 
 /**
  * @param {MapNode} node The node from which to calculate the heuristic
